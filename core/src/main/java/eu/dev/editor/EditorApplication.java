@@ -33,7 +33,7 @@ public class EditorApplication extends ApplicationAdapter {
 
         viewport = new SceneViewport();
         viewport.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        editorUI = new EditorUI(viewport);
+        editorUI = new EditorUI(viewport, new AppStorage());
     }
 
     @Override

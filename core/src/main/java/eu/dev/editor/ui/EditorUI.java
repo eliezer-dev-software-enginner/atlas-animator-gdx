@@ -3,6 +3,7 @@ package eu.dev.editor.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import eu.dev.editor.AppStorage;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneJsonExporter;
 import eu.dev.editor.scene.SceneJsonImporter;
@@ -19,14 +20,16 @@ import java.nio.file.StandardCopyOption;
 
 public class EditorUI {
     private final SceneViewport viewport;
+    private final AppStorage storage;
     private final InspectorPanel inspectorPanel = new InspectorPanel();
 
     private Scene scene = new Scene();
     private SceneObject selected;
     private volatile boolean dialogOpen;
 
-    public EditorUI(SceneViewport viewport) {
+    public EditorUI(SceneViewport viewport, AppStorage storage) {
         this.viewport = viewport;
+        this.storage = storage;
     }
 
     public Scene getScene() {
@@ -83,9 +86,11 @@ public class EditorUI {
         runDialog(() -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileFilter(new FileNameExtensionFilter("Images", "png", "jpg", "jpeg"));
+            preselect(chooser, storage.getLastSpritePath());
             if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
 
             File source = chooser.getSelectedFile();
+            storage.setLastSpritePath(source.getAbsolutePath());
             File spritesDir = new File("sprites");
             spritesDir.mkdirs();
             File dest = new File(spritesDir, source.getName());
@@ -115,9 +120,13 @@ public class EditorUI {
         runDialog(() -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileFilter(new FileNameExtensionFilter("Scene JSON", "json"));
+            preselect(chooser, storage.getLastLoadPath());
             if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
 
-            Scene loaded = SceneJsonImporter.load(new FileHandle(chooser.getSelectedFile()));
+            File file = chooser.getSelectedFile();
+            storage.setLastLoadPath(file.getAbsolutePath());
+
+            Scene loaded = SceneJsonImporter.load(new FileHandle(file));
             Gdx.app.postRunnable(() -> {
                 scene = loaded;
                 selected = null;
@@ -129,6 +138,9 @@ public class EditorUI {
         runDialog(() -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileFilter(new FileNameExtensionFilter("Scene JSON", "json"));
+            String lastExportPath = storage.getLastExportPath();
+            File lastExportDir = lastExportPath.isEmpty() ? null : new File(lastExportPath).getParentFile();
+            if (lastExportDir != null) chooser.setCurrentDirectory(lastExportDir);
             chooser.setSelectedFile(new File(scene.sceneName + ".json"));
             if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) return;
 
@@ -136,8 +148,13 @@ public class EditorUI {
             if (!file.getName().toLowerCase().endsWith(".json")) {
                 file = new File(file.getParentFile(), file.getName() + ".json");
             }
+            storage.setLastExportPath(file.getAbsolutePath());
             SceneJsonExporter.export(scene, new FileHandle(file));
         });
+    }
+
+    private static void preselect(JFileChooser chooser, String lastPath) {
+        if (!lastPath.isEmpty()) chooser.setSelectedFile(new File(lastPath));
     }
 
     private static String stripExtension(String name) {
