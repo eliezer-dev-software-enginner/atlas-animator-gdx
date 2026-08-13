@@ -6,6 +6,7 @@ public class SceneObject {
     public String texture = "";
     public float x, y;
     public float width = 32f, height = 32f;
+    public boolean visible = true;
 
     /**
      * Authoring-time positioning aid: when non-empty, x/y are overwritten every editor frame

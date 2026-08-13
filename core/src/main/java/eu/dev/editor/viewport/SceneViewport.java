@@ -52,7 +52,7 @@ public class SceneViewport {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (SceneObject obj : scene.objects) {
-            if (obj.texture.isEmpty()) continue;
+            if (obj.texture.isEmpty() || !obj.visible) continue;
             batch.draw(texture(obj.texture), obj.x, obj.y, obj.width, obj.height);
         }
         batch.end();
@@ -111,6 +111,7 @@ public class SceneViewport {
     private SceneObject pick(Scene scene, float worldX, float worldY) {
         for (int i = scene.objects.size() - 1; i >= 0; i--) {
             SceneObject obj = scene.objects.get(i);
+            if (!obj.visible) continue; // can't click on empty space; select it via Hierarchy instead
             if (worldX >= obj.x && worldX <= obj.x + obj.width && worldY >= obj.y && worldY <= obj.y + obj.height) {
                 return obj;
             }

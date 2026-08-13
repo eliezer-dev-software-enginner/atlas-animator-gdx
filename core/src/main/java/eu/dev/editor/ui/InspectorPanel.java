@@ -7,6 +7,7 @@ import eu.dev.editor.scene.SceneObject;
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiInputTextFlags;
+import imgui.type.ImBoolean;
 import imgui.type.ImFloat;
 import imgui.type.ImInt;
 import imgui.type.ImString;
@@ -31,12 +32,14 @@ public class InspectorPanel {
     private final ImInt alignXIndex = new ImInt();
     private final ImInt alignYIndex = new ImInt();
     private final ImString codeBuffer = new ImString(2048);
+    private final ImBoolean visibleField = new ImBoolean();
     private SceneObject codeGeneratedFor;
 
     public void render(Scene scene, SceneObject selected) {
         ImGui.setNextWindowPos(320, 40, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSize(300, 480, ImGuiCond.FirstUseEver);
         ImGui.begin("Inspector");
+        WindowBounds.keepOnScreen();
 
         if (selected == null) {
             ImGui.text("Nenhum objeto selecionado");
@@ -45,6 +48,10 @@ public class InspectorPanel {
             if (ImGui.inputText("Id", idField)) selected.id = idField.get();
 
             ImGui.text("Texture: " + selected.texture);
+
+            visibleField.set(selected.visible);
+            if (ImGui.checkbox("Visível", visibleField)) selected.visible = visibleField.get();
+
             ImGui.separator();
 
             renderAnchorCombo(scene, selected);

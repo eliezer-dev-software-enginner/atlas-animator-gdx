@@ -28,9 +28,12 @@ removido — é um projeto novo e independente agora.
     como referência visual pros anchors de cena.
   - `ui/` — `EditorUI` (menu + wiring), `HierarchyPanel` (nome/tamanho da cena,
     lista/seleção/remoção de objetos), `InspectorPanel` (campos id/x/y/width/height,
-    combo de anchor, geração de classe).
+    checkbox `visible`, combo de anchor, geração de classe), `WindowBounds`
+    (mantém a janela atual do ImGui dentro da área visível — chamado logo
+    após todo `ImGui.begin()` da Hierarchy/Inspector).
   - `codegen/ClassCodeGenerator.java` — gera um snippet de classe Java
-    (`Sprite` + construtor + `render`) a partir de um `SceneObject`.
+    (`Sprite` + construtor + `update`/`render`, respeitando `visible`) a
+    partir de um `SceneObject`.
 - UI usa `imgui-java` (io.github.spair, v1.92.7.1) — painéis flutuantes sobre a
   cena renderizada em tela cheia (sem docking, sem Scene2D na chrome).
 - Diálogos de arquivo (importar sprite, load/export JSON) usam `javax.swing.JFileChooser`

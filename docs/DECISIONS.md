@@ -140,3 +140,46 @@ sistema novo, só uma segunda origem possível de bounds pro que já existia.
 Pra isso fazer sentido visualmente, o viewport agora desenha um retângulo nos
 bounds da cena (`ShapeRenderer`) — sem ver onde a cena realmente termina,
 ancorar "na cena" seria ancorar numa caixa invisível.
+
+## 2026-08-13 — Painéis presos na tela, `visible` no objeto, `update()` na classe gerada
+Três pedidos diretos do usuário, implementados sem exigir decisão adicional:
+- `WindowBounds.keepOnScreen()` (chamado logo após `ImGui.begin()` na Hierarchy
+  e no Inspector) força o `x`/`y` da janela pra dentro de `[0, displaySize - windowSize]`
+  todo frame — a janela nunca fica arrastável pra fora da área visível.
+- `SceneObject.visible` (default `true`, checkbox "Visível" no Inspector).
+  `SceneViewport` não desenha nem permite clicar num objeto invisível (clicar
+  em cima da posição dele não seleciona nada — seleção continua possível pela
+  Hierarchy, que sempre lista todos os objetos independente de visibilidade).
+- `ClassCodeGenerator` agora gera `update(float delta)` (vazio, com comentário
+  `TODO`) e `render()` passa a checar `visible` antes de desenhar — o
+  construtor da classe gerada recebe `visible` como parâmetro, no mesmo padrão
+  já usado pra x/y/width/height (dado vem de fora, não é hardcoded).
+
+O rascunho de `Player` em `GameScreen.java` (`libgdx-example-game`) não foi
+migrado pra esse formato novo — foi editado à mão pelo usuário, não é o
+editor que deveria tocar nele de novo sem pedido explícito. Registrado em
+`TODO.md` como sugestão.
+
+## 2026-08-13 — Animações, eventos/sinais e gaps de gameplay: planejado, não implementado
+Usuário pediu 3 coisas maiores nesta mesma mensagem, todas tratadas como
+"registrar plano" em vez de "implementar agora" (por tamanho/risco, não por
+falta de valor — ver `TODO.md` pros planos completos):
+- **Animações**: usuário foi explícito que o jogo precisa rodar de verdade
+  (não só metadado no JSON). Plano detalhado em `TODO.md` cobre schema
+  (`animationFrames`/`animationFrameDuration`/`animationLoop`), UI do editor
+  (nova seção no Inspector, reaproveitando o fluxo de import de sprite já
+  existente) e reprodução real tanto no editor (WYSIWYG, o motivo original
+  deste projeto ser LibGDX e não um editor de imagem genérico) quanto no jogo
+  (`Animation<TextureRegion>` do próprio gdx).
+- **Sistema de eventos/sinais**: usuário mesmo marcou como "considere, se
+  fizer sentido". Avaliação em `TODO.md` separa duas ideias bem diferentes —
+  um event bus simples só do lado do jogo (baixo risco, mas prematuro sem uma
+  segunda classe gerada pra conversar com a primeira) vs. um sistema
+  condição→ação autorado no editor (visual scripting de verdade, quebraria a
+  fronteira "editor não roda lógica de jogo" que toda decisão até aqui
+  preservou de propósito). Recomendação: adiar os dois, o primeiro até ter uso
+  real, o segundo até uma discussão de design dedicada.
+- **Gaps pro primeiro jogo de teste**: auditoria registrada em `TODO.md`
+  (input/movimento, fábrica id→classe, interface comum de entidade, colisão
+  AABB, câmera de cena maior que uma tela) — nenhum item implementado, só
+  documentado pra não serem descobertos um por um por acidente depois.

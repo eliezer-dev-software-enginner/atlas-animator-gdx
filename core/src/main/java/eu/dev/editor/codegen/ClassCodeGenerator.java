@@ -12,13 +12,18 @@ public class ClassCodeGenerator {
                 "import com.badlogic.gdx.graphics.g2d.Sprite;\n" +
                 "import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n\n" +
                 "public class " + className + " {\n" +
-                "    final Sprite sprite;\n\n" +
-                "    public " + className + "(Texture texture, float x, float y, float width, float height) {\n" +
+                "    final Sprite sprite;\n" +
+                "    boolean visible;\n\n" +
+                "    public " + className + "(Texture texture, float x, float y, float width, float height, boolean visible) {\n" +
                 "        sprite = new Sprite(texture);\n" +
                 "        sprite.setBounds(x, y, width, height);\n" +
+                "        this.visible = visible;\n" +
+                "    }\n\n" +
+                "    public void update(float delta) {\n" +
+                "        // TODO: lógica do objeto (movimento, animação, etc.)\n" +
                 "    }\n\n" +
                 "    public void render(SpriteBatch batch) {\n" +
-                "        sprite.draw(batch);\n" +
+                "        if (visible) sprite.draw(batch);\n" +
                 "    }\n" +
                 "}\n";
     }

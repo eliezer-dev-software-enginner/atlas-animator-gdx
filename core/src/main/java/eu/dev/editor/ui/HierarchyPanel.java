@@ -19,6 +19,7 @@ public class HierarchyPanel {
         ImGui.setNextWindowPos(20, 40, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSize(280, 400, ImGuiCond.FirstUseEver);
         ImGui.begin("Hierarchy");
+        WindowBounds.keepOnScreen();
 
         sceneNameBuffer.set(scene.sceneName);
         if (ImGui.inputText("Scene", sceneNameBuffer)) {
