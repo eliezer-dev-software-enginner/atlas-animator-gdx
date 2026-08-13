@@ -24,11 +24,12 @@ public class EditorApplication extends ApplicationAdapter {
         ImGui.createContext();
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(null);
+        io.getFonts().addFontDefault();
+        io.getFonts().build();
 
         long windowHandle = ((Lwjgl3Graphics) Gdx.graphics).getWindow().getWindowHandle();
         imGuiGlfw.init(windowHandle, true);
         imGuiGl3.init("#version 150");
-        imGuiGl3.createFontsTexture();
 
         viewport = new SceneViewport();
         viewport.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -45,6 +46,7 @@ public class EditorApplication extends ApplicationAdapter {
         ScreenUtils.clear(0.15f, 0.15f, 0.15f, 1f);
 
         imGuiGlfw.newFrame();
+        imGuiGl3.newFrame();
         ImGui.newFrame();
 
         SceneObject selected = viewport.handleInput(editorUI.getScene(), editorUI.getSelected());
