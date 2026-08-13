@@ -4,6 +4,7 @@ import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneObject;
 import eu.dev.editor.viewport.SceneViewport;
 import imgui.ImGui;
+import imgui.flag.ImGuiCond;
 import imgui.type.ImString;
 
 import java.util.Iterator;
@@ -12,6 +13,8 @@ public class HierarchyPanel {
     private static final ImString sceneNameBuffer = new ImString(64);
 
     public static SceneObject render(Scene scene, SceneObject selected, SceneViewport viewport) {
+        ImGui.setNextWindowPos(20, 40, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(280, 400, ImGuiCond.FirstUseEver);
         ImGui.begin("Hierarchy");
 
         sceneNameBuffer.set(scene.sceneName);

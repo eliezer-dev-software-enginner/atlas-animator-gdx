@@ -2,6 +2,7 @@ package eu.dev.editor.ui;
 
 import eu.dev.editor.scene.SceneObject;
 import imgui.ImGui;
+import imgui.flag.ImGuiCond;
 import imgui.type.ImFloat;
 import imgui.type.ImString;
 
@@ -13,6 +14,8 @@ public class InspectorPanel {
     private final ImFloat heightField = new ImFloat();
 
     public void render(SceneObject selected) {
+        ImGui.setNextWindowPos(320, 40, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 220, ImGuiCond.FirstUseEver);
         ImGui.begin("Inspector");
 
         if (selected == null) {
