@@ -23,13 +23,14 @@ public class EditorUI {
     private final AppStorage storage;
     private final InspectorPanel inspectorPanel = new InspectorPanel();
 
-    private Scene scene = new Scene();
+    private Scene scene;
     private SceneObject selected;
     private volatile boolean dialogOpen;
 
-    public EditorUI(SceneViewport viewport, AppStorage storage) {
+    public EditorUI(SceneViewport viewport, AppStorage storage, Scene initialScene) {
         this.viewport = viewport;
         this.storage = storage;
+        this.scene = initialScene != null ? initialScene : new Scene();
     }
 
     public Scene getScene() {
@@ -125,6 +126,7 @@ public class EditorUI {
 
             File file = chooser.getSelectedFile();
             storage.setLastLoadPath(file.getAbsolutePath());
+            storage.setLastScenePath(file.getAbsolutePath());
 
             Scene loaded = SceneJsonImporter.load(new FileHandle(file));
             Gdx.app.postRunnable(() -> {
@@ -149,6 +151,7 @@ public class EditorUI {
                 file = new File(file.getParentFile(), file.getName() + ".json");
             }
             storage.setLastExportPath(file.getAbsolutePath());
+            storage.setLastScenePath(file.getAbsolutePath());
             SceneJsonExporter.export(scene, new FileHandle(file));
         });
     }

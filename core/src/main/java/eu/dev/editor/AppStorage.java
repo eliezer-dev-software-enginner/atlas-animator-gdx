@@ -9,6 +9,7 @@ public class AppStorage {
     private static final String KEY_LAST_SPRITE_PATH = "lastSpritePath";
     private static final String KEY_LAST_LOAD_PATH = "lastLoadPath";
     private static final String KEY_LAST_EXPORT_PATH = "lastExportPath";
+    private static final String KEY_LAST_SCENE_PATH = "lastScenePath";
 
     private final Preferences prefs = Gdx.app.getPreferences(PREFS_NAME);
 
@@ -34,5 +35,14 @@ public class AppStorage {
 
     public void setLastExportPath(String path) {
         prefs.putString(KEY_LAST_EXPORT_PATH, path).flush();
+    }
+
+    /** File the editor should reopen automatically on the next launch. */
+    public String getLastScenePath() {
+        return prefs.getString(KEY_LAST_SCENE_PATH, "");
+    }
+
+    public void setLastScenePath(String path) {
+        prefs.putString(KEY_LAST_SCENE_PATH, path).flush();
     }
 }

@@ -1,3 +1,8 @@
+## Scene editor (generated, machine-local):
+assets/editor-layout.ini
+editor-layout.ini
+assets/hs_err_pid*.log
+
 ## Gradle:
 .gradle/
 gradle-app.setting
@@ -162,4 +167,3 @@ Thumbs.db
 ## You could also add that configuration to the text in nativeimage.gradle .
 ## You should delete or comment out the next line if you have configuration in a different resource-config.json .
 **/resource-config.json
-/docs/
