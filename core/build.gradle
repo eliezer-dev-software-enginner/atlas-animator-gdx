@@ -1,0 +1,25 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+  // Editor is desktop-only (no android module), so core may depend on the lwjgl3 backend directly
+  // to reach the GLFW window handle ImGui needs.
+  api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+
+  api "io.github.spair:imgui-java-binding:$imguiVersion"
+  api "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
+  runtimeOnly "io.github.spair:imgui-java-natives-linux:$imguiVersion"
+  runtimeOnly "io.github.spair:imgui-java-natives-windows:$imguiVersion"
+  runtimeOnly "io.github.spair:imgui-java-natives-macos:$imguiVersion"
+
+  if(enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+  }
+}
+
+jar {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

@@ -1,0 +1,46 @@
+package eu.dev.editor.ui;
+
+import eu.dev.editor.scene.Scene;
+import eu.dev.editor.scene.SceneObject;
+import eu.dev.editor.viewport.SceneViewport;
+import imgui.ImGui;
+import imgui.type.ImString;
+
+import java.util.Iterator;
+
+public class HierarchyPanel {
+    private static final ImString sceneNameBuffer = new ImString(64);
+
+    public static SceneObject render(Scene scene, SceneObject selected, SceneViewport viewport) {
+        ImGui.begin("Hierarchy");
+
+        sceneNameBuffer.set(scene.sceneName);
+        if (ImGui.inputText("Scene", sceneNameBuffer)) {
+            scene.sceneName = sceneNameBuffer.get();
+        }
+        ImGui.separator();
+
+        SceneObject toRemove = null;
+        Iterator<SceneObject> it = scene.objects.iterator();
+        while (it.hasNext()) {
+            SceneObject obj = it.next();
+            boolean isSelected = obj == selected;
+            if (ImGui.selectable(obj.id.isEmpty() ? "(sem nome)" : obj.id, isSelected)) {
+                selected = obj;
+            }
+            ImGui.sameLine();
+            if (ImGui.smallButton("remover##" + System.identityHashCode(obj))) {
+                toRemove = obj;
+            }
+        }
+
+        if (toRemove != null) {
+            scene.objects.remove(toRemove);
+            if (!toRemove.texture.isEmpty()) viewport.releaseTexture(toRemove.texture);
+            if (selected == toRemove) selected = null;
+        }
+
+        ImGui.end();
+        return selected;
+    }
+}
