@@ -1,0 +1,9 @@
+bird.png
+size:512,128
+repeat:none
+welly_asas_baixo_
+bounds:210,2,102,69
+welly_asas_cima_
+bounds:2,2,102,69
+welly_planando_transicao_
+bounds:106,2,102,69
