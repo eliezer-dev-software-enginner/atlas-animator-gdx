@@ -4,9 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneObject;
 import imgui.ImGui;
@@ -20,11 +24,14 @@ public class SceneViewport {
     private final SpriteBatch batch = new SpriteBatch();
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final Map<String, Texture> textures = new HashMap<>();
+    private final Map<String, TextureAtlas> atlases = new HashMap<>();
+    private final Map<SceneObject, Float> animationStateTimes = new HashMap<>();
 
     private SceneObject dragging;
     private float dragOffsetX, dragOffsetY;
     private boolean panning;
     private float lastMouseX, lastMouseY;
+    private boolean paused;
 
     public SceneViewport() {
         camera.setToOrtho(false);
@@ -36,6 +43,34 @@ public class SceneViewport {
 
     public Texture texture(String relativePath) {
         return textures.computeIfAbsent(relativePath, p -> new Texture(Gdx.files.internal(p)));
+    }
+
+    public TextureAtlas atlas(String relativePath) {
+        return atlases.computeIfAbsent(relativePath, p -> new TextureAtlas(Gdx.files.internal(p)));
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void togglePause() {
+        paused = !paused;
+    }
+
+    private static boolean isAnimated(SceneObject obj) {
+        return !obj.atlas.isEmpty() && !obj.animationRegions.isEmpty();
+    }
+
+    private Animation<TextureRegion> buildAnimation(SceneObject obj) {
+        TextureAtlas textureAtlas = atlas(obj.atlas);
+        Array<TextureRegion> frames = new Array<>();
+        for (String region : obj.animationRegions) {
+            TextureRegion found = textureAtlas.findRegion(region);
+            if (found != null) frames.add(found);
+        }
+        if (frames.size == 0) return null;
+        return new Animation<>(obj.animationFrameDuration, frames,
+                obj.animationLoop ? Animation.PlayMode.LOOP : Animation.PlayMode.NORMAL);
     }
 
     public void render(Scene scene) {
@@ -52,8 +87,18 @@ public class SceneViewport {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (SceneObject obj : scene.objects) {
-            if (obj.texture.isEmpty() || !obj.visible) continue;
-            batch.draw(texture(obj.texture), obj.x, obj.y, obj.width, obj.height);
+            if (!obj.visible) continue;
+
+            if (isAnimated(obj)) {
+                Animation<TextureRegion> animation = buildAnimation(obj);
+                if (animation == null) continue;
+                float stateTime = animationStateTimes.getOrDefault(obj, 0f);
+                if (!paused) stateTime += Gdx.graphics.getDeltaTime();
+                animationStateTimes.put(obj, stateTime);
+                batch.draw(animation.getKeyFrame(stateTime), obj.x, obj.y, obj.width, obj.height);
+            } else if (!obj.texture.isEmpty()) {
+                batch.draw(texture(obj.texture), obj.x, obj.y, obj.width, obj.height);
+            }
         }
         batch.end();
     }
@@ -128,5 +173,6 @@ public class SceneViewport {
         batch.dispose();
         shapeRenderer.dispose();
         textures.values().forEach(Texture::dispose);
+        atlases.values().forEach(TextureAtlas::dispose);
     }
 }

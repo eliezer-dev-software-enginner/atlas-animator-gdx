@@ -1,9 +1,11 @@
 package eu.dev.editor.ui;
 
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import eu.dev.editor.codegen.ClassCodeGenerator;
 import eu.dev.editor.scene.AnchorResolver;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneObject;
+import eu.dev.editor.viewport.SceneViewport;
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiInputTextFlags;
@@ -13,7 +15,10 @@ import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 public class InspectorPanel {
     private static final String NONE_LABEL = "(nenhum)";
@@ -33,9 +38,12 @@ public class InspectorPanel {
     private final ImInt alignYIndex = new ImInt();
     private final ImString codeBuffer = new ImString(2048);
     private final ImBoolean visibleField = new ImBoolean();
+    private final ImInt regionPickIndex = new ImInt();
+    private final ImFloat animFrameDurationField = new ImFloat();
+    private final ImBoolean animLoopField = new ImBoolean();
     private SceneObject codeGeneratedFor;
 
-    public void render(Scene scene, SceneObject selected) {
+    public void render(Scene scene, SceneObject selected, SceneViewport viewport, Consumer<SceneObject> onAddAtlas) {
         ImGui.setNextWindowPos(320, 40, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSize(300, 480, ImGuiCond.FirstUseEver);
         ImGui.begin("Inspector");
@@ -84,6 +92,9 @@ public class InspectorPanel {
             if (ImGui.inputFloat("Height", heightField)) selected.height = heightField.get();
 
             ImGui.separator();
+            renderAnimationSection(viewport, selected, onAddAtlas);
+
+            ImGui.separator();
             renderCodeGeneration(selected);
         }
 
@@ -111,6 +122,54 @@ public class InspectorPanel {
         if (ImGui.combo("Anchor", anchorIndex, items)) {
             selected.anchorOf = values.get(anchorIndex.get());
         }
+    }
+
+    private void renderAnimationSection(SceneViewport viewport, SceneObject selected, Consumer<SceneObject> onAddAtlas) {
+        ImGui.text("Animação (atlas): " + (selected.atlas.isEmpty() ? "(nenhum)" : selected.atlas));
+        if (ImGui.button("Selecionar atlas...")) {
+            onAddAtlas.accept(selected);
+        }
+        if (!selected.atlas.isEmpty()) {
+            ImGui.sameLine();
+            if (ImGui.button("Remover atlas")) {
+                selected.atlas = "";
+                selected.animationRegions.clear();
+            }
+        }
+
+        if (selected.atlas.isEmpty()) return;
+
+        TextureAtlas textureAtlas = viewport.atlas(selected.atlas);
+        Set<String> regionNames = new LinkedHashSet<>();
+        for (TextureAtlas.AtlasRegion region : textureAtlas.getRegions()) {
+            regionNames.add(region.name);
+        }
+
+        if (!regionNames.isEmpty()) {
+            String[] items = regionNames.toArray(new String[0]);
+            regionPickIndex.set(Math.max(0, Math.min(regionPickIndex.get(), items.length - 1)));
+            ImGui.combo("Região", regionPickIndex, items);
+            ImGui.sameLine();
+            if (ImGui.button("Adicionar frame")) {
+                selected.animationRegions.add(items[regionPickIndex.get()]);
+            }
+        }
+
+        int removeIndex = -1;
+        for (int i = 0; i < selected.animationRegions.size(); i++) {
+            ImGui.text((i + 1) + ". " + selected.animationRegions.get(i));
+            ImGui.sameLine();
+            if (ImGui.smallButton("remover##anim" + i)) removeIndex = i;
+        }
+        if (removeIndex >= 0) selected.animationRegions.remove(removeIndex);
+
+        animFrameDurationField.set(selected.animationFrameDuration);
+        if (ImGui.inputFloat("Duração do frame", animFrameDurationField)) {
+            selected.animationFrameDuration = Math.max(0.01f, animFrameDurationField.get());
+        }
+
+        animLoopField.set(selected.animationLoop);
+        if (ImGui.checkbox("Loop", animLoopField)) selected.animationLoop = animLoopField.get();
     }
 
     private void renderCodeGeneration(SceneObject selected) {

@@ -7,6 +7,11 @@ public class ClassCodeGenerator {
 
     public static String generate(SceneObject object) {
         String className = className(object.id);
+        boolean animated = !object.atlas.isEmpty() && !object.animationRegions.isEmpty();
+        return animated ? generateAnimated(className) : generateStatic(className);
+    }
+
+    private static String generateStatic(String className) {
         return "package eu.dev;\n\n" +
                 "import com.badlogic.gdx.graphics.Texture;\n" +
                 "import com.badlogic.gdx.graphics.g2d.Sprite;\n" +
@@ -20,10 +25,38 @@ public class ClassCodeGenerator {
                 "        this.visible = visible;\n" +
                 "    }\n\n" +
                 "    public void update(float delta) {\n" +
-                "        // TODO: lógica do objeto (movimento, animação, etc.)\n" +
+                "        // TODO: lógica do objeto (movimento, etc.)\n" +
                 "    }\n\n" +
                 "    public void render(SpriteBatch batch) {\n" +
                 "        if (visible) sprite.draw(batch);\n" +
+                "    }\n" +
+                "}\n";
+    }
+
+    private static String generateAnimated(String className) {
+        return "package eu.dev;\n\n" +
+                "import com.badlogic.gdx.graphics.g2d.Animation;\n" +
+                "import com.badlogic.gdx.graphics.g2d.SpriteBatch;\n" +
+                "import com.badlogic.gdx.graphics.g2d.TextureRegion;\n\n" +
+                "public class " + className + " {\n" +
+                "    final Animation<TextureRegion> animation;\n" +
+                "    final float x, y, width, height;\n" +
+                "    boolean visible;\n" +
+                "    private float stateTime;\n\n" +
+                "    public " + className + "(Animation<TextureRegion> animation, float x, float y, float width, float height, boolean visible) {\n" +
+                "        this.animation = animation;\n" +
+                "        this.x = x;\n" +
+                "        this.y = y;\n" +
+                "        this.width = width;\n" +
+                "        this.height = height;\n" +
+                "        this.visible = visible;\n" +
+                "    }\n\n" +
+                "    public void update(float delta) {\n" +
+                "        stateTime += delta;\n" +
+                "        // TODO: lógica adicional do objeto\n" +
+                "    }\n\n" +
+                "    public void render(SpriteBatch batch) {\n" +
+                "        if (visible) batch.draw(animation.getKeyFrame(stateTime), x, y, width, height);\n" +
                 "    }\n" +
                 "}\n";
     }

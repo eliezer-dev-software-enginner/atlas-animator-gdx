@@ -29,6 +29,10 @@
   `render()`
 - [x] Corrigido: `SceneJsonImporter`/`SceneLoader` quebravam ao ler campo
   desconhecido no JSON (ver `DECISIONS.md`)
+- [x] Animações via `TextureAtlas` (`atlas`+`animationRegions`), reprodução
+  real no viewport com Pause/Play, geração de classe animada, e o jogo
+  (`Gamescreen`) desenhando qualquer objeto animado genericamente — ver
+  `DECISIONS.md`
 
 ## Não testado ainda
 - Anchors: compilou e rodou sem crash, mas o fluxo completo (selecionar
@@ -41,42 +45,11 @@
 - Painéis presos na tela / checkbox de visibilidade: compilou e rodou sem
   crash, não testado manualmente arrastando os painéis pra fora ou clicando o
   checkbox.
-
-## Plano: Animações (ainda não implementado)
-Pedido do usuário, com o requisito de que o **jogo realmente rode** a
-animação (não só a exportação de um frame estático). Plano:
-
-**Schema** (`SceneObject`):
-- `animationFrames: List<String>` — caminhos de textura, na ordem de
-  reprodução. Vazio = objeto estático, comportamento atual (`texture`)
-  continua valendo.
-- `animationFrameDuration: float` (default `0.1`) — segundos por frame.
-- `animationLoop: boolean` (default `true`).
-
-**Editor:**
-- Inspector ganha uma seção "Animação": botão "Adicionar frame..." reaproveita
-  o mesmo fluxo de import do "Add Sprite" (copia pra `assets/sprites/`,
-  adiciona o caminho em `animationFrames`); lista os frames já adicionados com
-  botão de remover (mesmo padrão da lista da Hierarchy); campos de duração e
-  loop.
-- `SceneViewport` passa a **tocar a animação de verdade** quando
-  `animationFrames` não está vazio (usando `com.badlogic.gdx.graphics.g2d.Animation<TextureRegion>`
-  + `Gdx.graphics.getDeltaTime()`), em vez de só mostrar `texture` parado —
-  isso é o motivo original de o editor rodar em cima do LibGDX de verdade
-  ("sem isso não tem WYSIWYG"), então animação tem que se ver rodando ali
-  também, não só no jogo.
-- Exportação: campos novos já funcionam automaticamente (schema evolutivo,
-  ambos os parsers já ignoram campo desconhecido — ver correção recente em
-  `DECISIONS.md`).
-
-**Jogo** (`ClassCodeGenerator` + classes geradas):
-- Quando o objeto tem `animationFrames`, o gerador produz uma classe diferente:
-  campo `Animation<TextureRegion>` + `float stateTime` em vez de só `Sprite`.
-  `update(float delta)` acumula `stateTime`; `render(SpriteBatch)` pega
-  `animation.getKeyFrame(stateTime, loop)` e desenha.
-- O carregamento de N texturas por objeto animado no `GameScreen`/`SceneLoader`
-  do jogo é o mesmo padrão já usado pra textura única, só percorrendo uma
-  lista por objeto em vez de um único caminho.
+- Animações via atlas: compilou e rodou sem crash nos dois projetos, e a
+  leitura do `bird.atlas` real foi validada num programa Java isolado (fora
+  do editor) — mas não cliquei em "Selecionar atlas...", "Adicionar frame",
+  Pause/Play, nem entrei na `Gamescreen` pelo menu do jogo pra ver a animação
+  rodando de verdade. Isso ainda precisa ser testado na mão.
 
 ## Considerado, não implementado: sistema de eventos/sinais
 Usuário sugeriu (com ressalva de "posso estar equivocado") um sistema de
@@ -108,29 +81,35 @@ Usuário pediu uma varredura do que falta pra sair de "cena posicionada" pra
 - **Input/movimento**: hoje só o `Stage` do HUD tem `InputProcessor`
   (`Gdx.input.setInputProcessor(stage)` em `GameScreen.show()`). Não existe
   nada movendo o `Player` — sem isso não dá pra "jogar" de fato.
-- **Fábrica `id → classe`**: `GameScreen.show()` hoje tem um
-  `if (object.id.equals("player"))` hardcoded. Funciona com um objeto, não
-  escala pra vários tipos (moeda, inimigo, ...). Um registro tipo
-  `Map<String, ObjectFactory>` (cada fábrica recebe `SceneObject` + texturas e
-  devolve um tipo comum) resolve isso.
+- **Fábrica `id → classe`**: `Gamescreen.show()` agora tem
+  `if (object.id.equals("player")) ... else if (object.id.equals("bullet")) ...`
+  hardcoded — já dobrou de um pra dois `if`s, e não escala pra mais tipos
+  (moeda, inimigo, ...). Um registro tipo `Map<String, ObjectFactory>` (cada
+  fábrica recebe `SceneObject` + textura/animação e devolve um tipo comum)
+  resolve isso. Ainda vale a pena, mesmo já tendo dois tipos funcionando.
 - **Interface comum pros objetos gerados**: algo tipo
   `interface SceneEntity { void update(float delta); void render(SpriteBatch batch); }`
-  deixaria `GameScreen` guardar `List<SceneEntity>` em vez de um campo solto
-  por tipo (`player`, depois `coins`, depois...). Amarra bem com a fábrica
-  acima e com o `update()`/`visible` que a classe gerada já tem agora.
+  deixaria `Gamescreen` guardar `List<SceneEntity>` em vez de um campo solto
+  por tipo (`player`, `bullet`, depois mais...). `Player`/`Bullet` já têm
+  `render(SpriteBatch)` no formato certo; só falta `visible` em ambos e
+  `update()` no `Bullet` pra ficarem no mesmo formato exato que
+  `ClassCodeGenerator` produz agora.
 - **Colisão**: não existe nenhuma. Pra um primeiro teste, checagem AABB simples
   (retângulo x/y/width/height, que todo objeto já tem) já basta — Box2D está
   como dependência no `core/build.gradle` mas não é usado em lugar nenhum, é
   mais peso do que precisa por enquanto.
-- **Câmera/cena maior que uma tela**: `GameScreen` usa `FitViewport(640, 360)`
+- **Câmera/cena maior que uma tela**: `Gamescreen` usa `FitViewport(640, 360)`
   fixo, sem scroll nem câmera seguindo o player. Um nível de uma tela só é um
   primeiro jogo de teste válido; só é bom saber disso antes de montar um nível
   maior esperando que "simplesmente funcione".
-- **`Player` inline em `GameScreen.java`**: é uma classe aninhada estática, de
-  antes do gerador de classe existir. Migrar pra uma classe própria
-  (`eu.dev.Player`, no formato que `ClassCodeGenerator` produz agora, com
-  `update()`/`visible`) deixaria consistente com qualquer próxima classe
-  gerada — não fiz isso agora pra não mexer em arquivo que você editou à mão.
+
+**Atualização**: o usuário já fez parte disso por conta própria, fora desta
+sessão — `GameScreen` virou `eu.dev.screens.Gamescreen`, `Player` foi extraído
+pra `eu.dev.objects.Player` (no formato que `ClassCodeGenerator` gera), e
+apareceu um `eu.dev.objects.Bullet` novo (ancorado no player via
+`anchorOf: "player"` na própria cena). A fábrica/interface comum acima ainda
+não existem, mas a extração de classes já é exatamente o passo que este item
+sugeria.
 
 ## Fora de escopo deste MVP (adiado)
 - Parallax em camadas

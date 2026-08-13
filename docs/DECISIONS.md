@@ -183,3 +183,44 @@ falta de valor — ver `TODO.md` pros planos completos):
   (input/movimento, fábrica id→classe, interface comum de entidade, colisão
   AABB, câmera de cena maior que uma tela) — nenhum item implementado, só
   documentado pra não serem descobertos um por um por acidente depois.
+
+## 2026-08-13 — Animações via atlas implementadas (não o plano de frames soltos)
+Usuário pediu pra começar pelo caminho mais simples: `TextureAtlas` do próprio
+gdx em vez do plano anterior de `animationFrames: List<String>` (um arquivo de
+textura solto por frame). Ele já tinha um atlas de verdade em
+`libgdx-example-game/assets/sprites/atlases/bird.atlas` — testado empiricamente
+(`TextureAtlas.TextureAtlasData` parseado num programinha Java isolado antes
+de mexer no código) e confirmado que carrega certo com a classe `TextureAtlas`
+real do gdx, apesar de usar `bounds:` em vez de `xy:`/`size:` (formato mais
+antigo/tolerado pelo parser).
+
+Schema mudou de "lista de arquivos" pra "atlas + lista de nomes de região"
+(`SceneObject.atlas` + `animationRegions`) — mais simples de importar (um
+`.atlas` + uma imagem, não N arquivos), e usa `TextureAtlas.findRegion(name)`
+em vez de gerenciar N `Texture` separadas.
+
+`ClassCodeGenerator` agora produz duas formas de classe (estática/`Sprite` ou
+animada/`Animation<TextureRegion>`) dependendo se o objeto tem atlas — quem
+monta a `Animation` é o código que instancia a classe gerada (`Gamescreen`),
+não a classe em si, mesmo padrão de "dado vem de fora" já usado pra x/y/width/height.
+
+**Jogo**: dessa vez os campos de animação tiveram que ser espelhados de
+verdade no `SceneObject` do `libgdx-example-game` (diferente do que aconteceu
+com anchor) — o jogo *usa* esse dado pra montar a animação, não dá pra só
+ignorar campo desconhecido. `Gamescreen.render()` ganhou desenho genérico de
+objeto animado (qualquer objeto com atlas, não só `player`/`bullet`) — assim
+o pipeline já funciona pra qualquer objeto novo que o usuário criar no editor
+com uma animação, sem precisar tocar em `Gamescreen.java` de novo.
+
+Durante essa mudança descobri que o usuário reestruturou o projeto do jogo
+por conta própria, fora desta sessão: `GameScreen` virou `eu.dev.screens.Gamescreen`,
+`Player` virou `eu.dev.objects.Player` (exatamente no formato que
+`ClassCodeGenerator` gera), e apareceu um `eu.dev.objects.Bullet` novo — sinal
+de que o fluxo gerar-classe→copiar-colar→editar à mão está sendo usado de
+verdade. Autorizado a modificar esses arquivos livremente ("pode modificar a
+vontade").
+
+**Não verificado interativamente**: não tenho como clicar no botão "start" do
+menu, importar o atlas pelo Inspector, nem observar visualmente a animação
+rodando — só compilação e ausência de crash nos primeiros segundos de
+execução (ambos os projetos), mais a validação isolada do parser do atlas.

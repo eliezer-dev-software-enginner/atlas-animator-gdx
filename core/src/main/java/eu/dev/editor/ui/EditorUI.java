@@ -3,6 +3,7 @@ package eu.dev.editor.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import eu.dev.editor.AppStorage;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneJsonExporter;
@@ -48,7 +49,7 @@ public class EditorUI {
     public void render() {
         renderMenuBar();
         selected = HierarchyPanel.render(scene, selected, viewport);
-        inspectorPanel.render(scene, selected);
+        inspectorPanel.render(scene, selected, viewport, this::addAtlas);
     }
 
     private void renderMenuBar() {
@@ -58,6 +59,9 @@ public class EditorUI {
                 if (ImGui.menuItem("Load...")) load();
                 if (ImGui.menuItem("Export...")) export();
                 ImGui.endMenu();
+            }
+            if (ImGui.menuItem(viewport.isPaused() ? "Play" : "Pause")) {
+                viewport.togglePause();
             }
             ImGui.endMainMenuBar();
         }
@@ -114,6 +118,46 @@ public class EditorUI {
                 scene.objects.add(obj);
                 selected = obj;
             });
+        });
+    }
+
+    private void addAtlas(SceneObject target) {
+        runDialog(() -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileFilter(new FileNameExtensionFilter("Atlas", "atlas"));
+            preselect(chooser, storage.getLastAtlasPath());
+            if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
+
+            File source = chooser.getSelectedFile();
+            storage.setLastAtlasPath(source.getAbsolutePath());
+
+            File atlasesDir = new File("sprites/atlases");
+            atlasesDir.mkdirs();
+
+            try {
+                // Reads the atlas' own header to find its page image(s), so both the .atlas
+                // and the .png(s) it points at get copied together - a lone .atlas file with
+                // no matching image next to it wouldn't load.
+                TextureAtlas.TextureAtlasData data = new TextureAtlas.TextureAtlasData(
+                        new FileHandle(source), new FileHandle(source.getParentFile()), false);
+
+                File destAtlas = new File(atlasesDir, source.getName());
+                Files.copy(source.toPath(), destAtlas.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                for (TextureAtlas.TextureAtlasData.Page page : data.getPages()) {
+                    File pageSource = page.textureFile.file();
+                    File pageDest = new File(atlasesDir, pageSource.getName());
+                    Files.copy(pageSource.toPath(), pageDest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                String relativePath = "sprites/atlases/" + destAtlas.getName();
+                Gdx.app.postRunnable(() -> {
+                    target.atlas = relativePath;
+                    target.animationRegions.clear();
+                });
+            } catch (IOException e) {
+                throw new RuntimeException("Falha ao importar atlas: " + source, e);
+            }
         });
     }
 

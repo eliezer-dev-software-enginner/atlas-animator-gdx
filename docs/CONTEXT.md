@@ -82,11 +82,55 @@ Resolvido só no editor — ver decisão em `DECISIONS.md`. O JSON exportado
 carrega tanto o `x`/`y` já resolvido (o jogo lê isso e ignora o resto) quanto
 os campos de anchor (pra continuar editável se você reabrir a cena no editor).
 
+## Animações (atlas)
+`SceneObject` tem `atlas` (caminho pro `.atlas`), `animationRegions`
+(`List<String>`, nomes de região na ordem de reprodução), `animationFrameDuration`
+e `animationLoop`. `atlas` + `animationRegions` não-vazios = objeto animado;
+senão continua estático (`texture`, como sempre foi).
+
+- Inspector: seção "Animação (atlas)" no objeto selecionado. "Selecionar
+  atlas..." abre um `.atlas` (mesmo padrão de thread/`postRunnable` dos outros
+  diálogos); copia o `.atlas` **e** a(s) imagem(ns) de página que ele
+  referencia (lidas via `TextureAtlas.TextureAtlasData`, não só o nome do
+  arquivo) pra `assets/sprites/atlases/`. Combo lista os nomes de região
+  disponíveis no atlas (`TextureAtlas.getRegions()`); "Adicionar frame" anexa
+  o nome escolhido em `animationRegions`; cada frame já adicionado tem botão
+  de remover. Duração do frame e loop são campos separados.
+- `SceneViewport` toca a animação de verdade (`Animation<TextureRegion>`
+  construído a partir das regiões do atlas, `Gdx.graphics.getDeltaTime()`
+  acumulado por objeto) — WYSIWYG real, não só um frame parado. Botão
+  "Pause"/"Play" na barra de menu (`SceneViewport.togglePause()`) para tudo
+  ao mesmo tempo; enquanto pausado o `stateTime` simplesmente não avança.
+- `AppStorage.lastAtlasPath` lembra o último `.atlas` escolhido, mesmo padrão
+  dos outros diálogos.
+
 ## Geração de classe (boilerplate)
 Botão "Gerar classe" no Inspector chama `ClassCodeGenerator.generate(object)`,
 mostra o resultado num campo de texto somente-leitura e tem um botão "Copiar"
 (`ImGui.setClipboardText`). O usuário cola manualmente no projeto do jogo — o
 editor nunca escreve arquivo `.java` em outro projeto (ver decisão).
+
+Gera duas formas diferentes dependendo do objeto: `Sprite`-based (estático,
+como sempre) ou `Animation<TextureRegion>`-based (quando o objeto tem atlas +
+`animationRegions`) — o construtor já recebe a `Animation` pronta, montada por
+quem instancia a classe (ver seção do jogo abaixo).
+
+## Do lado do jogo (`libgdx-example-game`)
+Esse projeto evoluiu bastante durante o desenvolvimento do editor — não é só
+um alvo de teste estático:
+- `eu.dev.Main` → `eu.dev.screens.MenuScreen` (botão "start" carregado via
+  `scene2d-hud-loader`) → `eu.dev.screens.Gamescreen` (renomeado de
+  `GameScreen`).
+- `eu.dev.objects.Player`/`Bullet` — classes extraídas pro formato que
+  `ClassCodeGenerator` produz (construtor recebe textura/posição prontos,
+  `update()`/`render(SpriteBatch)`), já com um objeto `bullet` ancorado no
+  `player` (`anchorOf: "player"`) no `assets/scenes/level_01.json` real.
+- `Gamescreen` mantém tanto o desenho genérico (qualquer objeto da cena que
+  não seja `player`/`bullet` — incluindo, agora, objetos animados por atlas)
+  quanto os objetos especiais construídos à mão. `eu.dev.scene.SceneObject`
+  nesse projeto precisou ganhar os mesmos campos de atlas/animação do editor
+  — dessa vez não dá pra só ignorar campo desconhecido (`ignoreUnknownFields`),
+  porque o jogo precisa *usar* esse dado, não só tolerar sua presença.
 
 ## Como rodar
 ```
