@@ -115,3 +115,22 @@ Escolhi resolver só no editor. Motivos:
 Contrapartida: um objeto ancorado não segue seu alvo durante o jogo de fato,
 só na hora de posicionar no editor. Se isso virar um requisito real (não só
 conveniência de autoria), a decisão deste registro precisa ser revisitada.
+
+## 2026-08-13 — Anchor também contra os bounds da própria cena, não só objetos
+Usuário apontou um problema real: só dá pra ancorar em outro objeto, mas x/y
+absoluto sozinho não significa nada de confiável entre dispositivos de
+tamanhos diferentes — "canto superior direito da tela" não é a mesma coisa que
+"x=600, y=340" se a cena não tem um tamanho de referência conhecido.
+
+Resolvido reaproveitando o mesmo mecanismo de anchor já existente: `Scene`
+ganhou `sceneWidth`/`sceneHeight` (default 640x360, mesma convenção do
+`FitViewport` já usado no `final-roz-game-new-java` original e no
+`libgdx-example-game`), e `anchorOf` aceita um valor especial
+(`AnchorResolver.SCENE_ANCHOR`) que faz o objeto ancorar contra `0,0`..`sceneWidth,sceneHeight`
+em vez de contra outro `SceneObject` — mesma matemática de alinhamento
+(`alignedX`/`alignedY`), só troca o que conta como "base". Não criou um
+sistema novo, só uma segunda origem possível de bounds pro que já existia.
+
+Pra isso fazer sentido visualmente, o viewport agora desenha um retângulo nos
+bounds da cena (`ShapeRenderer`) — sem ver onde a cena realmente termina,
+ancorar "na cena" seria ancorar numa caixa invisível.

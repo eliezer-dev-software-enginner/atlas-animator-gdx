@@ -1,6 +1,7 @@
 package eu.dev.editor.ui;
 
 import eu.dev.editor.codegen.ClassCodeGenerator;
+import eu.dev.editor.scene.AnchorResolver;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneObject;
 import imgui.ImGui;
@@ -14,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InspectorPanel {
-    private static final String NONE = "(nenhum)";
+    private static final String NONE_LABEL = "(nenhum)";
+    private static final String SCENE_LABEL = "(cena)";
     private static final String[] ALIGN_X = {"left", "center", "right"};
     private static final String[] ALIGN_Y = {"bottom", "center", "top"};
 
@@ -82,19 +84,25 @@ public class InspectorPanel {
     }
 
     private void renderAnchorCombo(Scene scene, SceneObject selected) {
-        List<String> options = new ArrayList<>();
-        options.add(NONE);
+        List<String> labels = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        labels.add(NONE_LABEL);
+        values.add("");
+        labels.add(SCENE_LABEL);
+        values.add(AnchorResolver.SCENE_ANCHOR);
         for (SceneObject object : scene.objects) {
-            if (object != selected) options.add(object.id);
+            if (object != selected) {
+                labels.add(object.id);
+                values.add(object.id);
+            }
         }
 
-        int current = selected.anchorOf.isEmpty() ? 0 : options.indexOf(selected.anchorOf);
+        int current = values.indexOf(selected.anchorOf);
         anchorIndex.set(Math.max(current, 0));
 
-        String[] items = options.toArray(new String[0]);
+        String[] items = labels.toArray(new String[0]);
         if (ImGui.combo("Anchor", anchorIndex, items)) {
-            String choice = items[anchorIndex.get()];
-            selected.anchorOf = choice.equals(NONE) ? "" : choice;
+            selected.anchorOf = values.get(anchorIndex.get());
         }
     }
 

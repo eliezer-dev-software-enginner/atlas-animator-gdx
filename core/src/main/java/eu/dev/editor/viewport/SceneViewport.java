@@ -1,9 +1,11 @@
 package eu.dev.editor.viewport;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneObject;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class SceneViewport {
     private final OrthographicCamera camera = new OrthographicCamera();
     private final SpriteBatch batch = new SpriteBatch();
+    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final Map<String, Texture> textures = new HashMap<>();
 
     private SceneObject dragging;
@@ -37,6 +40,15 @@ public class SceneViewport {
 
     public void render(Scene scene) {
         camera.update();
+
+        // Reference frame for scene-relative anchors - without seeing where the scene bounds
+        // actually are, "anchor to the scene" would just be anchoring to an invisible box.
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.CYAN);
+        shapeRenderer.rect(0, 0, scene.sceneWidth, scene.sceneHeight);
+        shapeRenderer.end();
+
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (SceneObject obj : scene.objects) {
@@ -113,6 +125,7 @@ public class SceneViewport {
 
     public void dispose() {
         batch.dispose();
+        shapeRenderer.dispose();
         textures.values().forEach(Texture::dispose);
     }
 }

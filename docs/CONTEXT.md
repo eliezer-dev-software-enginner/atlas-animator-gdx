@@ -23,34 +23,14 @@ removido — é um projeto novo e independente agora.
     pan (botão do meio), seleção/drag (botão esquerdo). Usa `ImGui.getIO().getWantCaptureMouse()`
     para não interagir com a cena quando o clique é sobre um painel ImGui.
     Objetos com `anchorOf` preenchido não são arrastáveis (posição vem do
-    `AnchorResolver`, arrastar seria sobrescrito no frame seguinte).
-  - `ui/` — `EditorUI` (menu + wiring), `HierarchyPanel` (lista/seleção/remoção),
-    `InspectorPanel` (campos id/x/y/width/height, combo de anchor, geração de
-    classe).
+    `AnchorResolver`, arrastar seria sobrescrito no frame seguinte). Desenha
+    um retângulo (`ShapeRenderer`) nos bounds da cena (`0,0`..`sceneWidth,sceneHeight`)
+    como referência visual pros anchors de cena.
+  - `ui/` — `EditorUI` (menu + wiring), `HierarchyPanel` (nome/tamanho da cena,
+    lista/seleção/remoção de objetos), `InspectorPanel` (campos id/x/y/width/height,
+    combo de anchor, geração de classe).
   - `codegen/ClassCodeGenerator.java` — gera um snippet de classe Java
     (`Sprite` + construtor + `render`) a partir de um `SceneObject`.
-
-## Anchors (posicionamento relativo)
-`SceneObject` tem `anchorOf` (id de outro objeto da cena, vazio = posição
-absoluta), `anchorAlignX`/`anchorAlignY` (`left/center/right`,
-`bottom/center/top`) e `anchorOffsetX`/`anchorOffsetY`. Editável só pelo
-combo "Anchor" do Inspector (aparece a lista de outros objetos da cena).
-
-`AnchorResolver.resolve(scene)` roda todo frame (`EditorApplication.render()`,
-antes do viewport) e sobrescreve `x`/`y` do objeto ancorado a partir dos bounds
-já resolvidos do objeto-base + alinhamento + offset. Referência quebrada
-(objeto deletado/renomeado), auto-anchor e ciclo (A→B→A) todos degradam pra
-"mantém a última posição conhecida" em vez de travar ou entrar em loop.
-
-Resolvido só no editor — ver decisão em `DECISIONS.md`. O JSON exportado
-carrega tanto o `x`/`y` já resolvido (o jogo lê isso e ignora o resto) quanto
-os campos de anchor (pra continuar editável se você reabrir a cena no editor).
-
-## Geração de classe (boilerplate)
-Botão "Gerar classe" no Inspector chama `ClassCodeGenerator.generate(object)`,
-mostra o resultado num campo de texto somente-leitura e tem um botão "Copiar"
-(`ImGui.setClipboardText`). O usuário cola manualmente no projeto do jogo — o
-editor nunca escreve arquivo `.java` em outro projeto (ver decisão).
 - UI usa `imgui-java` (io.github.spair, v1.92.7.1) — painéis flutuantes sobre a
   cena renderizada em tela cheia (sem docking, sem Scene2D na chrome).
 - Diálogos de arquivo (importar sprite, load/export JSON) usam `javax.swing.JFileChooser`
@@ -72,6 +52,38 @@ editor nunca escreve arquivo `.java` em outro projeto (ver decisão).
   `assets/editor-layout.ini` — arquivo padrão do próprio Dear ImGui
   (`io.setIniFilename(...)`), salvo automaticamente e recarregado na próxima
   abertura. Gitignored (é estado local da máquina, não conteúdo do projeto).
+
+## Anchors (posicionamento relativo)
+`SceneObject` tem `anchorOf`, `anchorAlignX`/`anchorAlignY` (`left/center/right`,
+`bottom/center/top`) e `anchorOffsetX`/`anchorOffsetY`. `anchorOf` pode ser:
+- vazio → posição absoluta (x/y editados direto, como sempre foi)
+- id de outro objeto da cena → ancorado a esse objeto
+- `AnchorResolver.SCENE_ANCHOR` (sentinel `"__scene__"`) → ancorado aos bounds
+  da própria cena (`0,0`..`sceneWidth,sceneHeight`), pra posicionamento que
+  faz sentido independente do dispositivo (ex: "canto superior direito da
+  tela") em vez de sempre depender de outro objeto existir
+
+Editável só pelo combo "Anchor" do Inspector (lista "(nenhum)", "(cena)" e os
+outros objetos da cena). `Scene.sceneWidth`/`sceneHeight` (default 640x360,
+mesma convenção do `FitViewport` já usado nos dois projetos de jogo desta
+suite) são editáveis no topo do Hierarchy.
+
+`AnchorResolver.resolve(scene)` roda todo frame (`EditorApplication.render()`,
+antes do viewport) e sobrescreve `x`/`y` do objeto ancorado a partir dos bounds
+já resolvidos do objeto-base (ou da cena) + alinhamento + offset. Referência
+quebrada (objeto deletado/renomeado), auto-anchor e ciclo (A→B→A) todos
+degradam pra "mantém a última posição conhecida" em vez de travar ou entrar
+em loop.
+
+Resolvido só no editor — ver decisão em `DECISIONS.md`. O JSON exportado
+carrega tanto o `x`/`y` já resolvido (o jogo lê isso e ignora o resto) quanto
+os campos de anchor (pra continuar editável se você reabrir a cena no editor).
+
+## Geração de classe (boilerplate)
+Botão "Gerar classe" no Inspector chama `ClassCodeGenerator.generate(object)`,
+mostra o resultado num campo de texto somente-leitura e tem um botão "Copiar"
+(`ImGui.setClipboardText`). O usuário cola manualmente no projeto do jogo — o
+editor nunca escreve arquivo `.java` em outro projeto (ver decisão).
 
 ## Como rodar
 ```

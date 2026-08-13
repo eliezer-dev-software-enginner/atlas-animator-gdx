@@ -18,14 +18,16 @@
   (`.ini` nativo do ImGui)
 - [x] Reabrir automaticamente a última cena usada (Load ou Export) ao iniciar
 - [x] `git init` + commits
-- [x] Anchors (posicionamento relativo a outro objeto, resolvido no editor —
-  ver `DECISIONS.md`)
+- [x] Anchors (posicionamento relativo a outro objeto OU aos bounds da cena,
+  resolvido no editor — ver `DECISIONS.md`)
 - [x] Geração de snippet de classe (`Sprite`-based) com botão de copiar
+- [x] `sceneWidth`/`sceneHeight` editáveis, com outline visual no viewport
 
 ## Não testado ainda
 - Anchors: compilou e rodou sem crash, mas o fluxo completo (selecionar
-  "Anchor" no combo, ver o objeto seguir a base ao arrastá-la, salvar/reabrir
-  e a relação continuar editável) não foi clicado manualmente.
+  "Anchor" no combo — objeto ou "(cena)" —, ver o objeto seguir a base ao
+  arrastá-la/redimensionar a cena, salvar/reabrir e a relação continuar
+  editável) não foi clicado manualmente.
 - Geração de classe: botão "Gerar classe" + "Copiar" não foi testado
   manualmente (só verificado que compila e o texto gerado bate com o
   esperado por leitura de código).
