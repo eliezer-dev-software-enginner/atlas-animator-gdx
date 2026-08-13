@@ -104,9 +104,15 @@ Escolhi resolver só no editor. Motivos:
 - Mantém a mesma fronteira de sempre (editor não roda lógica de jogo) — se
   anchors resolvessem em tempo real, o parser do lado do jogo precisaria
   entender a relação e recalcular posição todo frame, o que é lógica de jogo.
-- O jogo não precisa de nenhuma mudança: `SceneObject`/`SceneLoader` no
-  `libgdx-example-game` continuam lendo só x/y absolutos, ignorando os campos
-  de anchor (gdx `Json` já tolera campos extras).
+- O jogo não precisa mudar o *schema*: `SceneObject` no `libgdx-example-game`
+  continua lendo só x/y absolutos, sem precisar saber o que é anchor.
+  **Correção (2026-08-13):** achei que gdx `Json` ignorava campo desconhecido
+  por padrão — errado, `ignoreUnknownFields` é `false` por padrão e quebrou em
+  produção (`SerializationException: Field not found: anchorOf`) assim que o
+  editor passou a exportar os campos de anchor. Corrigido chamando
+  `json.setIgnoreUnknownFields(true)` no `SceneLoader` do jogo (e também no
+  `SceneJsonImporter` do editor, pelo mesmo motivo). Precisa disso em toda
+  classe que só lê um subconjunto dos campos do JSON.
 - É a opção reversível: se um dia for preciso anchor dinâmico de verdade (item
   flutuando sobre o player enquanto ele anda, por exemplo), dá pra adicionar
   isso depois sem quebrar cenas já exportadas — o JSON já carrega tanto o
