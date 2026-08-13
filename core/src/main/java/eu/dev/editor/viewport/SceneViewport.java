@@ -72,11 +72,17 @@ public class SceneViewport {
         }
 
         if (!capturedByUi && ImGui.isMouseClicked(0)) {
-            dragging = pick(scene, world.x, world.y);
-            if (dragging != null) {
-                selected = dragging;
-                dragOffsetX = world.x - dragging.x;
-                dragOffsetY = world.y - dragging.y;
+            SceneObject picked = pick(scene, world.x, world.y);
+            if (picked != null) {
+                selected = picked;
+                // Anchored objects are positioned by AnchorResolver every frame - dragging one
+                // directly would just get overwritten. Editing its offset in the inspector is
+                // the way to move it.
+                if (picked.anchorOf.isEmpty()) {
+                    dragging = picked;
+                    dragOffsetX = world.x - picked.x;
+                    dragOffsetY = world.y - picked.y;
+                }
             }
         }
         if (dragging != null && ImGui.isMouseDown(0)) {

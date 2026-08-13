@@ -70,3 +70,48 @@ arquivo mais recentemente usado, seja lendo ou escrevendo, vira "a cena
 atual"). `EditorApplication.create()` tenta carregar esse arquivo automaticamente;
 se não existir mais ou o JSON estiver corrompido, cai pra uma `Scene` vazia em
 vez de travar a abertura do editor.
+
+## 2026-08-13 — Geração de boilerplate: snippet copiável, não escrita direta no jogo
+Usuário deu 3 opções (gerar classe automaticamente + editar à mão / editor de
+código dentro do editor / gerar código visual pra copiar) e pediu recomendação.
+Descartei a opção de editor de código embutido — imgui-java não tem um widget
+de code editor pronto, e mais importante: editor e jogo são projetos/processos
+separados, então o texto digitado ali ainda precisaria virar um `.java` real
+no projeto do jogo por algum outro caminho, não elimina a complexidade da
+opção de escrever arquivo, só adiciona uma UI de texto em cima.
+
+Entre "escrever o .java direto no projeto do jogo" e "gerar um snippet pra
+copiar", escolhi o snippet: zero risco de sobrescrever código já editado à
+mão (o problema central de qualquer geração automática — recomendação B do
+usuário, escrever só se o arquivo não existir, resolveria isso mas ainda
+exige o editor ter acesso de escrita a um projeto que não é o dele).
+Mantém a fronteira já estabelecida desde o MVP original: o editor não toca no
+projeto do jogo, só produz JSON (e agora também um texto pra copiar).
+
+`ClassCodeGenerator` gera uma classe com campo `Sprite` (não `Texture` cru +
+`batch.draw` manual, como ficou o rascunho do `Player` em `GameScreen.java`)
+— ganha rotação/escala/tint de graça e é mais idiomático libGDX.
+
+## 2026-08-13 — Anchors resolvidos só no editor (decisão delegada: "você decide")
+Usuário pediu posicionamento relativo (ex: objeto no topo de outro, com
+espaçamento, centralizado) configurável via campos tipo "fromXOf"/"fromYOf" no
+Inspector — like em engines como Godot/Unity. A pergunta em aberto era:
+resolver só na hora de editar (posição final vira x/y fixo no JSON) ou em
+tempo real dentro do jogo (objeto de fato segue outro que se move durante a
+partida)? Usuário delegou a escolha, pedindo só que ficasse registrada aqui.
+
+Escolhi resolver só no editor. Motivos:
+- Mantém a mesma fronteira de sempre (editor não roda lógica de jogo) — se
+  anchors resolvessem em tempo real, o parser do lado do jogo precisaria
+  entender a relação e recalcular posição todo frame, o que é lógica de jogo.
+- O jogo não precisa de nenhuma mudança: `SceneObject`/`SceneLoader` no
+  `libgdx-example-game` continuam lendo só x/y absolutos, ignorando os campos
+  de anchor (gdx `Json` já tolera campos extras).
+- É a opção reversível: se um dia for preciso anchor dinâmico de verdade (item
+  flutuando sobre o player enquanto ele anda, por exemplo), dá pra adicionar
+  isso depois sem quebrar cenas já exportadas — o JSON já carrega tanto o
+  x/y calculado quanto os campos de anchor originais.
+
+Contrapartida: um objeto ancorado não segue seu alvo durante o jogo de fato,
+só na hora de posicionar no editor. Se isso virar um requisito real (não só
+conveniência de autoria), a decisão deste registro precisa ser revisitada.

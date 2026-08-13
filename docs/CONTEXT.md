@@ -17,12 +17,40 @@ removido — é um projeto novo e independente agora.
   - `EditorApplication.java` — ApplicationAdapter principal, liga o ciclo de
     vida do ImGui (GLFW + GL3) ao loop do LibGDX.
   - `scene/` — `SceneObject`, `Scene`, `SceneJsonExporter`, `SceneJsonImporter`
-    (usa `com.badlogic.gdx.utils.Json`).
+    (usa `com.badlogic.gdx.utils.Json`), `AnchorResolver` (posicionamento
+    relativo — ver seção Anchors abaixo).
   - `viewport/SceneViewport.java` — câmera orto, SpriteBatch, zoom (scroll),
     pan (botão do meio), seleção/drag (botão esquerdo). Usa `ImGui.getIO().getWantCaptureMouse()`
     para não interagir com a cena quando o clique é sobre um painel ImGui.
+    Objetos com `anchorOf` preenchido não são arrastáveis (posição vem do
+    `AnchorResolver`, arrastar seria sobrescrito no frame seguinte).
   - `ui/` — `EditorUI` (menu + wiring), `HierarchyPanel` (lista/seleção/remoção),
-    `InspectorPanel` (campos id/x/y/width/height).
+    `InspectorPanel` (campos id/x/y/width/height, combo de anchor, geração de
+    classe).
+  - `codegen/ClassCodeGenerator.java` — gera um snippet de classe Java
+    (`Sprite` + construtor + `render`) a partir de um `SceneObject`.
+
+## Anchors (posicionamento relativo)
+`SceneObject` tem `anchorOf` (id de outro objeto da cena, vazio = posição
+absoluta), `anchorAlignX`/`anchorAlignY` (`left/center/right`,
+`bottom/center/top`) e `anchorOffsetX`/`anchorOffsetY`. Editável só pelo
+combo "Anchor" do Inspector (aparece a lista de outros objetos da cena).
+
+`AnchorResolver.resolve(scene)` roda todo frame (`EditorApplication.render()`,
+antes do viewport) e sobrescreve `x`/`y` do objeto ancorado a partir dos bounds
+já resolvidos do objeto-base + alinhamento + offset. Referência quebrada
+(objeto deletado/renomeado), auto-anchor e ciclo (A→B→A) todos degradam pra
+"mantém a última posição conhecida" em vez de travar ou entrar em loop.
+
+Resolvido só no editor — ver decisão em `DECISIONS.md`. O JSON exportado
+carrega tanto o `x`/`y` já resolvido (o jogo lê isso e ignora o resto) quanto
+os campos de anchor (pra continuar editável se você reabrir a cena no editor).
+
+## Geração de classe (boilerplate)
+Botão "Gerar classe" no Inspector chama `ClassCodeGenerator.generate(object)`,
+mostra o resultado num campo de texto somente-leitura e tem um botão "Copiar"
+(`ImGui.setClipboardText`). O usuário cola manualmente no projeto do jogo — o
+editor nunca escreve arquivo `.java` em outro projeto (ver decisão).
 - UI usa `imgui-java` (io.github.spair, v1.92.7.1) — painéis flutuantes sobre a
   cena renderizada em tela cheia (sem docking, sem Scene2D na chrome).
 - Diálogos de arquivo (importar sprite, load/export JSON) usam `javax.swing.JFileChooser`

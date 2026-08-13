@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.ScreenUtils;
+import eu.dev.editor.scene.AnchorResolver;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneJsonImporter;
 import eu.dev.editor.scene.SceneObject;
@@ -23,6 +24,7 @@ public class EditorApplication extends ApplicationAdapter {
 
     private SceneViewport viewport;
     private EditorUI editorUI;
+    private final AnchorResolver anchorResolver = new AnchorResolver();
 
     @Override
     public void create() {
@@ -70,6 +72,8 @@ public class EditorApplication extends ApplicationAdapter {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
+
+        anchorResolver.resolve(editorUI.getScene());
 
         SceneObject selected = viewport.handleInput(editorUI.getScene(), editorUI.getSelected());
         editorUI.setSelected(selected);

@@ -48,7 +48,7 @@ public class EditorUI {
     public void render() {
         renderMenuBar();
         selected = HierarchyPanel.render(scene, selected, viewport);
-        inspectorPanel.render(selected);
+        inspectorPanel.render(scene, selected);
     }
 
     private void renderMenuBar() {
