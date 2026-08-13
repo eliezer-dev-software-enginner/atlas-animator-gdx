@@ -28,6 +28,7 @@ public class EditorApplication extends ApplicationAdapter {
         long windowHandle = ((Lwjgl3Graphics) Gdx.graphics).getWindow().getWindowHandle();
         imGuiGlfw.init(windowHandle, true);
         imGuiGl3.init("#version 150");
+        imGuiGl3.createFontsTexture();
 
         viewport = new SceneViewport();
         viewport.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
