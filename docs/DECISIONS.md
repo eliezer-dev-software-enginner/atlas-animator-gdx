@@ -224,3 +224,43 @@ vontade").
 menu, importar o atlas pelo Inspector, nem observar visualmente a animação
 rodando — só compilação e ausência de crash nos primeiros segundos de
 execução (ambos os projetos), mais a validação isolada do parser do atlas.
+
+## 2026-08-13 — Tilemap: sem copiar arquivo, sempre na origem da cena
+Usuário pediu visualização de tilemap no editor, com um `.tmx` real já em
+`assets/maps/` (`mundo1.tmx`) pra testar, e pediu explicitamente pra eu não
+depender só dele e decidir o que fosse relevante. Duas decisões de design
+tomadas sem perguntar:
+
+**Não copiar o `.tmx` ao importar** (diferente de Add Sprite/Add Atlas, que
+copiam). Um `.tmx` pode referenciar tilesets externos (`.tsx`, cada um com
+sua própria imagem) e tilesets inline com caminho relativo que apontam pra
+qualquer lugar — o `mundo1.tmx` de teste tem exatamente isso
+(`../doors/porta_tramela_azul.png`, fora de `assets/maps/`). Copiar esse
+grafo de dependências mantendo toda referência relativa intacta é bem mais
+arriscado que só exigir que o `.tmx` já esteja em `assets/` (que é como o
+mapa de teste chegou lá mesmo). "Add Tilemap..." só referencia o caminho,
+abrindo o diálogo já em `assets/maps/`.
+
+**Tilemap sempre desenha em `0,0`**, ignorando `x`/`y` do objeto como offset
+de renderização — nem arrastável no viewport. `TiledMapRenderer` não tem uma
+forma simples de deslocar a posição desenhada sem transladar a matriz de
+projeção separadamente do resto da cena, e na prática uma cena tem no máximo
+um tilemap, que já nasce como "o chão". Não vale a complexidade agora;
+documentado como limitação conhecida, não escondido.
+
+Também precisei de uma segunda decisão pequena: **seleção por clique
+prioriza qualquer objeto não-tilemap**, numa passada separada, independente
+da ordem em que os objetos foram criados — um tilemap cobre a cena inteira e
+sempre desenha por baixo, então sem essa regra ele "roubaria" cliques de
+objetos menores por cima dele dependendo de quando cada um foi adicionado à
+lista.
+
+**Verificação**: como não consigo clicar no menu do jogo nem no Inspector,
+verifiquei carregando o `mundo1.tmx` real (não um mapa de brinquedo) dentro
+de cada projeto de verdade — um diagnóstico temporário em
+`EditorApplication.create()` (editor) e trocando `Main.java` pra abrir
+`Gamescreen` direto + um objeto tilemap temporário em `level_01.json` (jogo),
+rodando dentro do contexto GL real de cada um, checando ausência de exceção,
+e revertendo os dois antes do commit. Isso pega o caso realmente arriscado
+(tileset externo + tilesets inline com path relativo saindo da pasta) que um
+teste isolado de parsing não pegaria.

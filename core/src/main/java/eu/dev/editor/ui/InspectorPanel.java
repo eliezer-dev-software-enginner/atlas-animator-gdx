@@ -51,6 +51,8 @@ public class InspectorPanel {
 
         if (selected == null) {
             ImGui.text("Nenhum objeto selecionado");
+        } else if (selected.type.equals("tilemap")) {
+            renderTilemapView(selected);
         } else {
             idField.set(selected.id);
             if (ImGui.inputText("Id", idField)) selected.id = idField.get();
@@ -99,6 +101,24 @@ public class InspectorPanel {
         }
 
         ImGui.end();
+    }
+
+    /**
+     * Tilemaps skip position/anchor/animation/codegen entirely - none of that applies to a
+     * background layer that's always drawn at world origin (see SceneViewport/SceneObject).
+     */
+    private void renderTilemapView(SceneObject selected) {
+        idField.set(selected.id);
+        if (ImGui.inputText("Id", idField)) selected.id = idField.get();
+
+        ImGui.text("Tilemap: " + selected.tmx);
+        ImGui.text(String.format("Tamanho: %.0f x %.0f px", selected.width, selected.height));
+
+        visibleField.set(selected.visible);
+        if (ImGui.checkbox("Visível", visibleField)) selected.visible = visibleField.get();
+
+        ImGui.separator();
+        ImGui.textWrapped("Tilemap sempre desenha na origem da cena (0,0) — posição, anchor e animação não se aplicam.");
     }
 
     private void renderAnchorCombo(Scene scene, SceneObject selected) {

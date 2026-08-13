@@ -9,6 +9,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import eu.dev.editor.scene.Scene;
@@ -25,6 +29,8 @@ public class SceneViewport {
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
     private final Map<String, Texture> textures = new HashMap<>();
     private final Map<String, TextureAtlas> atlases = new HashMap<>();
+    private final Map<String, TiledMap> tiledMaps = new HashMap<>();
+    private final Map<String, TiledMapRenderer> tiledMapRenderers = new HashMap<>();
     private final Map<SceneObject, Float> animationStateTimes = new HashMap<>();
 
     private SceneObject dragging;
@@ -47,6 +53,14 @@ public class SceneViewport {
 
     public TextureAtlas atlas(String relativePath) {
         return atlases.computeIfAbsent(relativePath, p -> new TextureAtlas(Gdx.files.internal(p)));
+    }
+
+    public TiledMap tiledMap(String relativePath) {
+        return tiledMaps.computeIfAbsent(relativePath, p -> new TmxMapLoader().load(p));
+    }
+
+    private TiledMapRenderer tiledMapRenderer(String relativePath) {
+        return tiledMapRenderers.computeIfAbsent(relativePath, p -> new OrthogonalTiledMapRenderer(tiledMap(p), batch));
     }
 
     public boolean isPaused() {
@@ -76,6 +90,17 @@ public class SceneViewport {
     public void render(Scene scene) {
         camera.update();
 
+        // Tilemaps render in their own begin/end cycle (TiledMapRenderer manages the batch
+        // internally, can't nest inside the sprite batch's own begin/end below), always at
+        // world origin, and always first so it reads as a background/ground layer.
+        for (SceneObject obj : scene.objects) {
+            if (obj.visible && obj.type.equals("tilemap") && !obj.tmx.isEmpty()) {
+                TiledMapRenderer renderer = tiledMapRenderer(obj.tmx);
+                renderer.setView(camera);
+                renderer.render();
+            }
+        }
+
         // Reference frame for scene-relative anchors - without seeing where the scene bounds
         // actually are, "anchor to the scene" would just be anchoring to an invisible box.
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -87,7 +112,7 @@ public class SceneViewport {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (SceneObject obj : scene.objects) {
-            if (!obj.visible) continue;
+            if (!obj.visible || obj.type.equals("tilemap")) continue;
 
             if (isAnimated(obj)) {
                 Animation<TextureRegion> animation = buildAnimation(obj);
@@ -134,8 +159,9 @@ public class SceneViewport {
                 selected = picked;
                 // Anchored objects are positioned by AnchorResolver every frame - dragging one
                 // directly would just get overwritten. Editing its offset in the inspector is
-                // the way to move it.
-                if (picked.anchorOf.isEmpty()) {
+                // the way to move it. Tilemaps always render at world origin, not x/y - nothing
+                // to drag.
+                if (picked.anchorOf.isEmpty() && !picked.type.equals("tilemap")) {
                     dragging = picked;
                     dragOffsetX = world.x - picked.x;
                     dragOffsetY = world.y - picked.y;
@@ -153,15 +179,27 @@ public class SceneViewport {
         return selected;
     }
 
+    /**
+     * Tilemaps are checked in a separate, lower-priority pass regardless of list order - a
+     * tilemap's bounds usually cover the whole scene, and it's always drawn first/beneath, so
+     * it should never steal a click from a smaller object sitting on top of it.
+     */
     private SceneObject pick(Scene scene, float worldX, float worldY) {
         for (int i = scene.objects.size() - 1; i >= 0; i--) {
             SceneObject obj = scene.objects.get(i);
-            if (!obj.visible) continue; // can't click on empty space; select it via Hierarchy instead
-            if (worldX >= obj.x && worldX <= obj.x + obj.width && worldY >= obj.y && worldY <= obj.y + obj.height) {
-                return obj;
-            }
+            if (!obj.visible || obj.type.equals("tilemap")) continue;
+            if (contains(obj, worldX, worldY)) return obj;
+        }
+        for (int i = scene.objects.size() - 1; i >= 0; i--) {
+            SceneObject obj = scene.objects.get(i);
+            if (!obj.visible || !obj.type.equals("tilemap")) continue;
+            if (contains(obj, worldX, worldY)) return obj;
         }
         return null;
+    }
+
+    private static boolean contains(SceneObject obj, float worldX, float worldY) {
+        return worldX >= obj.x && worldX <= obj.x + obj.width && worldY >= obj.y && worldY <= obj.y + obj.height;
     }
 
     public void releaseTexture(String relativePath) {
@@ -174,5 +212,6 @@ public class SceneViewport {
         shapeRenderer.dispose();
         textures.values().forEach(Texture::dispose);
         atlases.values().forEach(TextureAtlas::dispose);
+        tiledMaps.values().forEach(TiledMap::dispose);
     }
 }

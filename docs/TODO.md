@@ -33,6 +33,11 @@
   real no viewport com Pause/Play, geração de classe animada, e o jogo
   (`Gamescreen`) desenhando qualquer objeto animado genericamente — ver
   `DECISIONS.md`
+- [x] Tilemap (Tiled `.tmx`) — "Add Tilemap..." referencia (não copia) o
+  arquivo, `SceneViewport` desenha como camada de fundo, `Gamescreen` faz o
+  mesmo genericamente. Verificado com o `mundo1.tmx` real (tileset externo +
+  tilesets inline com path relativo pra fora de `assets/maps/`) rodando
+  dentro dos dois projetos de verdade — ver `DECISIONS.md`
 
 ## Não testado ainda
 - Anchors: compilou e rodou sem crash, mas o fluxo completo (selecionar
@@ -50,6 +55,12 @@
   do editor) — mas não cliquei em "Selecionar atlas...", "Adicionar frame",
   Pause/Play, nem entrei na `Gamescreen` pelo menu do jogo pra ver a animação
   rodando de verdade. Isso ainda precisa ser testado na mão.
+- Tilemap: o carregamento em si foi verificado dentro do contexto real dos
+  dois projetos (não só compilação — ver `DECISIONS.md`), mas não cliquei em
+  "Add Tilemap..." pelo diálogo de verdade nem vi o mapa desenhado na tela
+  (só confirmei ausência de exceção no log). Selecionar o tilemap clicando
+  nele no viewport (a passada de picking de menor prioridade) também não foi
+  testada na mão.
 
 ## Considerado, não implementado: sistema de eventos/sinais
 Usuário sugeriu (com ressalva de "posso estar equivocado") um sistema de
@@ -113,10 +124,12 @@ sugeria.
 
 ## Fora de escopo deste MVP (adiado)
 - Parallax em camadas
-- Tilemap
 - Múltiplas cenas/níveis num só projeto
 - Anchors resolvidos em tempo real no jogo (hoje só na hora de editar — ver
   `DECISIONS.md`)
+- Tilemap arrastável/posicionável (hoje sempre em 0,0 — ver `DECISIONS.md`)
+- "Add Tilemap..." copiando o `.tmx` e suas dependências (hoje só referencia
+  um arquivo que já precisa estar em `assets/` — ver `DECISIONS.md`)
 
 ## Possíveis próximos passos
 - Zoom centralizado no cursor do mouse (hoje zoom só move o "zoom" da câmera,

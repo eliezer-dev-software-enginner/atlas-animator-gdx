@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import eu.dev.editor.AppStorage;
 import eu.dev.editor.scene.Scene;
 import eu.dev.editor.scene.SceneJsonExporter;
@@ -17,6 +19,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class EditorUI {
@@ -56,6 +59,7 @@ public class EditorUI {
         if (ImGui.beginMainMenuBar()) {
             if (ImGui.beginMenu("Scene")) {
                 if (ImGui.menuItem("Add Sprite...")) addSprite();
+                if (ImGui.menuItem("Add Tilemap...")) addTilemap();
                 if (ImGui.menuItem("Load...")) load();
                 if (ImGui.menuItem("Export...")) export();
                 ImGui.endMenu();
@@ -159,6 +163,59 @@ public class EditorUI {
                 throw new RuntimeException("Falha ao importar atlas: " + source, e);
             }
         });
+    }
+
+    /**
+     * Unlike Add Sprite/Add Atlas, this doesn't copy the .tmx anywhere - a Tiled map can
+     * reference other tilesets (external .tsx files, each with their own image) and inline
+     * tilesets with relative image paths that may point outside assets/maps/ entirely.
+     * Reliably copying that whole dependency graph while keeping every relative reference
+     * intact is a lot riskier than just requiring the file to already live under assets/,
+     * which is also just how the map already on disk got here.
+     */
+    private void addTilemap() {
+        runDialog(() -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileFilter(new FileNameExtensionFilter("Tiled Map", "tmx"));
+            String lastTilemapPath = storage.getLastTilemapPath();
+            if (!lastTilemapPath.isEmpty()) {
+                preselect(chooser, lastTilemapPath);
+            } else {
+                File mapsDir = new File("maps");
+                if (mapsDir.isDirectory()) chooser.setCurrentDirectory(mapsDir);
+            }
+            if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
+
+            File source = chooser.getSelectedFile();
+            storage.setLastTilemapPath(source.getAbsolutePath());
+            String relativePath = relativeToAssets(source);
+
+            Gdx.app.postRunnable(() -> {
+                TiledMap map = viewport.tiledMap(relativePath);
+                MapProperties props = map.getProperties();
+                int mapWidth = props.get("width", Integer.class);
+                int mapHeight = props.get("height", Integer.class);
+                int tileWidth = props.get("tilewidth", Integer.class);
+                int tileHeight = props.get("tileheight", Integer.class);
+
+                SceneObject obj = new SceneObject();
+                obj.id = stripExtension(source.getName());
+                obj.type = "tilemap";
+                obj.tmx = relativePath;
+                obj.width = mapWidth * tileWidth;
+                obj.height = mapHeight * tileHeight;
+
+                scene.objects.add(obj);
+                selected = obj;
+            });
+        });
+    }
+
+    /** Assumes cwd is the assets/ root, same convention "sprites/..." paths already rely on. */
+    private static String relativeToAssets(File file) {
+        Path assetsRoot = new File(".").getAbsoluteFile().toPath().normalize();
+        Path chosen = file.getAbsoluteFile().toPath().normalize();
+        return assetsRoot.relativize(chosen).toString().replace(File.separatorChar, '/');
     }
 
     private void load() {

@@ -21,6 +21,15 @@ public class SceneObject {
     public boolean animationLoop = true;
 
     /**
+     * Tiled map background layer. Only meaningful when type is "tilemap". Always drawn at
+     * world origin (x/y aren't used as a render offset) - a scene has at most one ground
+     * layer in practice, and offsetting it correctly would need translating the tilemap
+     * renderer's projection matrix separately from everything else in the viewport, which
+     * isn't worth the complexity for a background that's always meant to start at 0,0.
+     */
+    public String tmx = "";
+
+    /**
      * Authoring-time positioning aid: when non-empty, x/y are overwritten every editor frame
      * from the referenced object's bounds (id) + alignment + offset, instead of being edited
      * directly. Resolved and baked into x/y before export — the game only ever sees plain

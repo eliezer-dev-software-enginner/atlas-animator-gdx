@@ -11,6 +11,7 @@ public class AppStorage {
     private static final String KEY_LAST_EXPORT_PATH = "lastExportPath";
     private static final String KEY_LAST_SCENE_PATH = "lastScenePath";
     private static final String KEY_LAST_ATLAS_PATH = "lastAtlasPath";
+    private static final String KEY_LAST_TILEMAP_PATH = "lastTilemapPath";
 
     private final Preferences prefs = Gdx.app.getPreferences(PREFS_NAME);
 
@@ -53,5 +54,13 @@ public class AppStorage {
 
     public void setLastAtlasPath(String path) {
         prefs.putString(KEY_LAST_ATLAS_PATH, path).flush();
+    }
+
+    public String getLastTilemapPath() {
+        return prefs.getString(KEY_LAST_TILEMAP_PATH, "");
+    }
+
+    public void setLastTilemapPath(String path) {
+        prefs.putString(KEY_LAST_TILEMAP_PATH, path).flush();
     }
 }

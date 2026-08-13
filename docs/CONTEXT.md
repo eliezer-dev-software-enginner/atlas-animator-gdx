@@ -34,6 +34,8 @@ removido — é um projeto novo e independente agora.
   - `codegen/ClassCodeGenerator.java` — gera um snippet de classe Java
     (`Sprite` + construtor + `update`/`render`, respeitando `visible`) a
     partir de um `SceneObject`.
+- Tilemap (Tiled/`.tmx`) via `com.badlogic.gdx.maps.tiled` — já é parte do gdx
+  core, não precisou de dependência nova.
 - UI usa `imgui-java` (io.github.spair, v1.92.7.1) — painéis flutuantes sobre a
   cena renderizada em tela cheia (sem docking, sem Scene2D na chrome).
 - Diálogos de arquivo (importar sprite, load/export JSON) usam `javax.swing.JFileChooser`
@@ -104,6 +106,47 @@ senão continua estático (`texture`, como sempre foi).
 - `AppStorage.lastAtlasPath` lembra o último `.atlas` escolhido, mesmo padrão
   dos outros diálogos.
 
+## Tilemap (Tiled)
+`SceneObject.tmx` (caminho pro `.tmx`) + `type = "tilemap"`. Diferente de
+todo resto no editor, um tilemap **sempre desenha na origem da cena (0,0)** —
+`x`/`y` do objeto não viram offset de renderização. Motivo: `TiledMapRenderer`
+não tem um jeito simples de deslocar onde o mapa desenha sem transladar a
+própria matriz de projeção separadamente do resto do viewport, e na prática
+uma cena tem no máximo um tilemap, que já nasce como "o chão" — não vale a
+complexidade de suportar arrastar isso por enquanto (documentado, não é uma
+omissão silenciosa).
+
+- "Add Tilemap..." (menu Scene) abre um `.tmx` — **não copia** o arquivo pra
+  lugar nenhum (diferente de Add Sprite/Add Atlas). Um `.tmx` pode referenciar
+  outros tilesets externos (`.tsx`, cada um com sua própria imagem) e
+  tilesets inline com caminho relativo que podem apontar pra fora de
+  `assets/maps/` inteiramente (o `mundo1.tmx` de teste faz isso:
+  `../doors/porta_tramela_azul.png`). Copiar esse grafo de dependências
+  mantendo toda referência relativa intacta é bem mais arriscado que só
+  exigir que o arquivo já esteja em `assets/` — que é como o mapa de teste já
+  chegou lá mesmo. O diálogo abre direto em `assets/maps/` por padrão.
+- Ao importar, o editor carrega o mapa uma vez (`TmxMapLoader`) só pra ler
+  `width`/`height`/`tilewidth`/`tileheight` das propriedades e calcular o
+  tamanho em pixels do objeto (usado só informativamente no Inspector).
+- `SceneViewport` desenha o tilemap (`OrthogonalTiledMapRenderer`, batch
+  compartilhado com os sprites) **antes** de tudo, no próprio ciclo
+  begin/end — não dá pra aninhar dentro do `batch.begin()` dos sprites porque
+  o renderer do tilemap gerencia o batch por conta própria internamente.
+- Seleção: tilemap é checado numa passada separada, sempre por último,
+  independente da ordem na lista — um tilemap cobre a cena inteira, então sem
+  isso ele "roubaria" cliques de objetos menores desenhados por cima dele
+  dependendo da ordem em que foram criados.
+- Inspector: view dedicada e bem mais simples pra `type == "tilemap"` — só
+  id, caminho do `.tmx`, tamanho calculado e visibilidade. Sem posição, sem
+  anchor, sem animação, sem geração de classe (nenhum desses conceitos se
+  aplica a uma camada de fundo).
+- **Verificado com o mapa real** (`mundo1.tmx`, 50x30 tiles, tileset externo
+  `Tiles64.tsx` + tilesets inline com caminho relativo pra fora de
+  `assets/maps/`) via diagnóstico temporário rodado dentro do editor de
+  verdade (não só um parser isolado) — carregou sem exceção, junto com
+  player/bullet/animação simultaneamente no lado do jogo. Removido antes do
+  commit.
+
 ## Geração de classe (boilerplate)
 Botão "Gerar classe" no Inspector chama `ClassCodeGenerator.generate(object)`,
 mostra o resultado num campo de texto somente-leitura e tem um botão "Copiar"
@@ -126,11 +169,12 @@ um alvo de teste estático:
   `update()`/`render(SpriteBatch)`), já com um objeto `bullet` ancorado no
   `player` (`anchorOf: "player"`) no `assets/scenes/level_01.json` real.
 - `Gamescreen` mantém tanto o desenho genérico (qualquer objeto da cena que
-  não seja `player`/`bullet` — incluindo, agora, objetos animados por atlas)
-  quanto os objetos especiais construídos à mão. `eu.dev.scene.SceneObject`
-  nesse projeto precisou ganhar os mesmos campos de atlas/animação do editor
-  — dessa vez não dá pra só ignorar campo desconhecido (`ignoreUnknownFields`),
-  porque o jogo precisa *usar* esse dado, não só tolerar sua presença.
+  não seja `player`/`bullet` — incluindo, agora, objetos animados por atlas e
+  tilemaps) quanto os objetos especiais construídos à mão.
+  `eu.dev.scene.SceneObject` nesse projeto precisou ganhar os mesmos campos
+  de atlas/animação/tilemap do editor — dessa vez não dá pra só ignorar campo
+  desconhecido (`ignoreUnknownFields`), porque o jogo precisa *usar* esse
+  dado, não só tolerar sua presença.
 
 ## Como rodar
 ```
