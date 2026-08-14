@@ -2,10 +2,8 @@
 eclipse.project.name = appName + '-core'
 
 dependencies {
-  api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
-  api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-  // Editor is desktop-only (no android module), so core may depend on the lwjgl3 backend directly
+  // Desktop-only tool (no android module), so core may depend on the lwjgl3 backend directly
   // to reach the GLFW window handle ImGui needs.
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
 

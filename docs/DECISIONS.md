@@ -1,5 +1,60 @@
 # Decisões Arquiteturais
 
+## 2026-08-14 — Pivô: só o preview de animação por atlas sobrevive
+Usuário desistiu do projeto de editor de cena inteiro. Da lista de
+funcionalidades construídas, só a de animação por `TextureAtlas` valia a pena
+manter. Pedido: remover tudo que for inútil, renomear a aplicação pra algo
+envolvendo "gdx atlas animator" (em inglês), e trocar geração de classe por
+geração de snippet puro (sem classe).
+
+**Removido** (arquivos deletados, não só desabilitados): `Scene`/`SceneObject`
+(o conceito de cena inteiro), `SceneJsonExporter`/`SceneJsonImporter`
+(sem mais export/import de cena), `AnchorResolver` (sem mais posicionamento
+relativo — não tem mais "objetos" pra posicionar), `HierarchyPanel`
+(sem mais lista de objetos), `EditorUI` (menu com Add Sprite/Add
+Tilemap/Load/Export — nenhum faz sentido mais), suporte a tilemap (`.tmx`) e
+a sprites estáticos, o toggle `visible`, `ClassCodeGenerator` (virou
+`AtlasAnimationSnippetGenerator`, sem classe).
+
+**Mantido e adaptado**: a lógica de reprodução de animação por atlas
+(`SceneViewport` → `AnimationViewport`, bem mais simples: sem picking, sem
+drag, sem sprites/tilemap, só toca a única animação atual centralizada na
+origem), o fluxo de importar atlas (copia `.atlas` + imagem(ns) de página,
+mesma lógica de `TextureAtlas.TextureAtlasData`), `WindowBounds` (painel
+preso na tela), e o padrão de diálogo em thread própria +
+`Gdx.app.postRunnable`.
+
+**Renomeado**: pacote `eu.dev.editor` → `eu.dev.animator`;
+`EditorApplication` → `AnimatorApplication`; `SceneViewport` →
+`AnimationViewport`; `InspectorPanel`+`HierarchyPanel`+`EditorUI` → um único
+`AnimatorPanel` (só existe uma coisa sendo editada agora, não faz sentido
+dividir em painéis separados nem ter uma barra de menu com várias ações —
+sobrou só "Selecionar atlas..." e Pause/Play, ambos cabem direto no painel).
+`appName` no Gradle e o título da janela viraram "gdx-atlas-animator"/"GDX
+Atlas Animator". `editor-layout.ini` → `animator-layout.ini`.
+
+**Modelo de dados**: `SceneObject` (14 campos: id, type, texture, x, y,
+width, height, visible, atlas, animationRegions, animationFrameDuration,
+animationLoop, anchorOf, anchorAlignX...) virou `AtlasAnimation` (4 campos:
+atlas, regions, frameDuration, loop). Sem id/posição/tamanho/visibilidade —
+nenhum desses conceitos existe mais fora do contexto de uma cena.
+
+**Assets**: `assets/sprites/atlases/` → `assets/atlases/` (sem mais pasta
+`sprites/` já que não importa sprite estático). Todo o resto em `assets/`
+(sobras do jogo original: doors, enemies, maps/tilemap, ui, sounds, música,
+sprites soltos, arquivos de projeto do Tiled) foi deletado — nada disso é
+usado por este projeto, e ainda existe nos projetos de jogo se for
+necessário de novo. `docs/PROMPT.md` também removido (já estava marcado como
+"desconsiderar" em `RULES.md`, e descrevia um escopo que não existe mais).
+
+**Dependências**: `gdx-box2d`/`gdx-freetype` removidas do `core`/`lwjgl3`
+(nunca foram usadas nem no editor de cena nem aqui — sobra do template
+original do jogo).
+
+Histórico anterior a este ponto (entradas abaixo) documenta decisões do
+editor de cena que não existe mais — mantido como registro, não como
+descrição do estado atual (isso é o que `CONTEXT.md` faz).
+
 ## 2026-08-13 — Editor construído sobre a cópia do jogo, não do zero
 O repositório já era uma cópia de `final-roz-game-new-java` com as telas do
 jogo (`GameScreen`, `Player`, etc.) staged para remoção numa sessão anterior.
