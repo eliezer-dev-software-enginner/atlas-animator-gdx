@@ -11,7 +11,7 @@ mais um editor de cena — isso foi abandonado, só essa funcionalidade ficou
 - `core/src/main/java/eu/dev/animator/`
   - `AnimatorApplication.java` — bootstrap: ciclo de vida do ImGui (GLFW +
     GL3), dono da única `AtlasAnimation` em edição, e o diálogo de arquivo
-    ("Selecionar atlas...", roda em thread própria — ver seção abaixo).
+    ("Select atlas...", roda em thread própria — ver seção abaixo).
   - `AtlasAnimation.java` — o único modelo de dados: `atlas` (caminho),
     `regions` (`List<String>`, ordem de reprodução), `frameDuration`, `loop`.
   - `AtlasAnimationSnippetGenerator.java` — gera só o código de construção da
@@ -23,15 +23,15 @@ mais um editor de cena — isso foi abandonado, só essa funcionalidade ficou
     (botão do meio), cache de `TextureAtlas`, toca a animação de verdade
     (`Animation<TextureRegion>` reconstruído a cada frame a partir das
     regiões, `stateTime` acumulado com `Gdx.graphics.getDeltaTime()`,
-    Pausar/Reproduzir). Desenha centralizado na origem — não tem cena, não tem
+    Pause/Play). Desenha centralizado na origem — não tem cena, não tem
     posição, é só a prévia.
   - `ui/AnimatorPanel.java` — painel único: seleção de atlas, picker de
-    região + lista ordenada com remoção, duração/loop, Pausar/Reproduzir,
-    geração de snippet + copiar (com feedback "Copiado!" por 1.5s). Painel
+    região + lista ordenada com remoção, duração/loop, Pause/Play,
+    geração de snippet + copiar (com feedback "Copied!" por 1.5s). Painel
     fixo (`ImGuiWindowFlags.NoMove | NoResize` + `ImGuiCond.Always`) — não
     dá pra arrastar nem redimensionar.
 
-## Fluxo "Selecionar atlas..."
+## Fluxo "Select atlas..."
 Igual ao "Add Atlas" do projeto anterior: lê o `.atlas` escolhido via
 `TextureAtlas.TextureAtlasData` pra descobrir a(s) imagem(ns) de página que
 ele referencia, copia o `.atlas` **e** as imagens juntas pra

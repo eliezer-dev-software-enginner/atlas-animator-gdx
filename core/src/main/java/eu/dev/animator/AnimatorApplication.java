@@ -113,7 +113,7 @@ public class AnimatorApplication extends ApplicationAdapter {
                     animation.regions.clear();
                 });
             } catch (IOException e) {
-                throw new RuntimeException("Falha ao importar atlas", e);
+                throw new RuntimeException("Failed to import atlas", e);
             } finally {
                 dialogOpen = false;
             }

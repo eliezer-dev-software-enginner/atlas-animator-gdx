@@ -32,15 +32,15 @@ public class AnimatorPanel {
         // has a different saved position - the panel is meant to be fixed, not just clamped on-screen.
         ImGui.setNextWindowPos(20, 20, ImGuiCond.Always);
         ImGui.setNextWindowSize(380, 480, ImGuiCond.Always);
-        ImGui.begin("Animador", FIXED_FLAGS);
+        ImGui.begin("Animator", FIXED_FLAGS);
 
-        ImGui.text("Atlas: " + (animation.atlas.isEmpty() ? "(nenhum)" : animation.atlas));
-        if (ImGui.button("Selecionar atlas...")) {
+        ImGui.text("Atlas: " + (animation.atlas.isEmpty() ? "(none)" : animation.atlas));
+        if (ImGui.button("Select atlas...")) {
             onSelectAtlas.run();
         }
         if (!animation.atlas.isEmpty()) {
             ImGui.sameLine();
-            if (ImGui.button("Remover atlas")) {
+            if (ImGui.button("Remove atlas")) {
                 animation.atlas = "";
                 animation.regions.clear();
                 codeGenerated = false;
@@ -57,14 +57,14 @@ public class AnimatorPanel {
 
         ImGui.separator();
         frameDurationField.set(animation.frameDuration);
-        if (ImGui.inputFloat("Duração do frame", frameDurationField)) {
+        if (ImGui.inputFloat("Frame duration", frameDurationField)) {
             animation.frameDuration = Math.max(0.01f, frameDurationField.get());
         }
         loopField.set(animation.loop);
-        if (ImGui.checkbox("Repetir", loopField)) animation.loop = loopField.get();
+        if (ImGui.checkbox("Loop", loopField)) animation.loop = loopField.get();
 
         ImGui.separator();
-        if (ImGui.button(viewport.isPaused() ? "Reproduzir" : "Pausar")) {
+        if (ImGui.button(viewport.isPaused() ? "Play" : "Pause")) {
             viewport.togglePause();
         }
 
@@ -84,9 +84,9 @@ public class AnimatorPanel {
         if (!regionNames.isEmpty()) {
             String[] items = regionNames.toArray(new String[0]);
             regionPickIndex.set(Math.max(0, Math.min(regionPickIndex.get(), items.length - 1)));
-            ImGui.combo("Região", regionPickIndex, items);
+            ImGui.combo("Region", regionPickIndex, items);
             ImGui.sameLine();
-            if (ImGui.button("Adicionar frame")) {
+            if (ImGui.button("Add frame")) {
                 animation.regions.add(items[regionPickIndex.get()]);
             }
         }
@@ -95,26 +95,26 @@ public class AnimatorPanel {
         for (int i = 0; i < animation.regions.size(); i++) {
             ImGui.text((i + 1) + ". " + animation.regions.get(i));
             ImGui.sameLine();
-            if (ImGui.smallButton("remover##anim" + i)) removeIndex = i;
+            if (ImGui.smallButton("remove##anim" + i)) removeIndex = i;
         }
         if (removeIndex >= 0) animation.regions.remove(removeIndex);
     }
 
     private void renderSnippetGeneration(AtlasAnimation animation) {
-        if (ImGui.button("Gerar snippet")) {
+        if (ImGui.button("Generate snippet")) {
             codeBuffer.set(AtlasAnimationSnippetGenerator.generate(animation));
             codeGenerated = true;
         }
         if (codeGenerated) {
             ImGui.inputTextMultiline("##snippet", codeBuffer, 340, 160, ImGuiInputTextFlags.ReadOnly);
-            if (ImGui.button("Copiar")) {
+            if (ImGui.button("Copy")) {
                 ImGui.setClipboardText(codeBuffer.get());
                 copyFeedbackTimer = 1.5f;
             }
             if (copyFeedbackTimer > 0f) {
                 copyFeedbackTimer -= Gdx.graphics.getDeltaTime();
                 ImGui.sameLine();
-                ImGui.textColored(0.4f, 1f, 0.4f, 1f, "Copiado!");
+                ImGui.textColored(0.4f, 1f, 0.4f, 1f, "Copied!");
             }
         }
     }

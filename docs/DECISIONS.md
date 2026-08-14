@@ -1,5 +1,22 @@
 # Decisões Arquiteturais
 
+## 2026-08-14 — Idioma final: tudo em inglês (UI + README)
+Foi e voltou no mesmo dia: primeiro pedido foi traduzir UI + README pra
+português; depois só o README voltou pra inglês (UI ficaria português);
+por fim o usuário corrigiu que a UI também deveria estar em inglês. Estado
+final, sem ambiguidade: `AnimatorPanel` (botões, combo, checkbox, título
+do painel "Animator"), a mensagem de exceção do diálogo de atlas, e o
+`README.md` inteiro (incluindo os rótulos citados entre aspas, que agora
+batem com o texto real da UI) estão todos em inglês. `docs/*.md`
+continuam em português — são notas de engenharia pessoais, não pediram
+tradução, só os rótulos citados entre aspas foram atualizados pra
+continuar batendo com a UI real.
+
+README ganhou 3 seções pedidas: "Advantages" (por que usar em vez de
+escrever a mão), "FAQ" (roda o jogo? funciona sem atlas? lembra o último
+caminho? Windows/macOS?) e "Support" com o link do Buy Me a Coffee
+(https://buymeacoffee.com/eliezerdev).
+
 ## 2026-08-14 — Renomeado pra `atlas-animator-gdx`, empacotamento via jpackage (como o `hud-creator-gdx`)
 Usuário pediu configuração de geração de aplicativo igual à de outro
 projeto irmão da suite, `hud-creator-gdx`, e trocou o nome do app pra
@@ -121,7 +138,7 @@ preso na tela), e o padrão de diálogo em thread própria +
 `AnimationViewport`; `InspectorPanel`+`HierarchyPanel`+`EditorUI` → um único
 `AnimatorPanel` (só existe uma coisa sendo editada agora, não faz sentido
 dividir em painéis separados nem ter uma barra de menu com várias ações —
-sobrou só "Selecionar atlas..." e Pausar/Reproduzir, ambos cabem direto no painel).
+sobrou só "Select atlas..." e Pause/Play, ambos cabem direto no painel).
 `appName` no Gradle e o título da janela viraram "gdx-atlas-animator"/"GDX
 Atlas Animator". `editor-layout.ini` → `animator-layout.ini`.
 
