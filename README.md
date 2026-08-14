@@ -1,47 +1,24 @@
 # Atlas Animator GDX
 
-Ferramenta desktop pequena e focada: carrega um `TextureAtlas` (LibGDX),
-monta uma sequência de animação a partir das regiões do atlas, mostra a
-animação rodando de verdade (não um frame parado) e gera o snippet de código
-Java pra colar no seu jogo.
+Small, focused desktop tool: loads a `TextureAtlas` (LibGDX), builds an
+animation sequence from the atlas' regions, shows the animation actually
+playing (not a frozen frame), and generates the Java code snippet to paste
+into your game.
 
-Nasceu como um editor de cena maior (posicionar sprites, anchors, tilemap...)
-que foi abandonado — só a parte de preview de animação por atlas sobreviveu,
-porque era a que valia a pena manter.
+Started out as a bigger scene editor (positioning sprites, anchors,
+tilemap...) that got abandoned — only the atlas animation preview part
+survived, because that was the part worth keeping.
 
-## Como usar
+## Usage
 
 ```
 ./gradlew lwjgl3:run
 ```
 
-1. "Selecionar atlas..." — escolhe um `.atlas`. O arquivo e a(s) imagem(ns)
-   de página que ele referencia são copiados pra `assets/atlases/`.
-2. Escolhe as regiões (na ordem que quiser que toquem) pelo combo + "Adicionar
-   frame". Remove com o botão ao lado de cada frame na lista.
-3. Ajusta duração do frame e repetição. Pausar/Reproduzir controla a prévia.
-4. "Gerar snippet" + "Copiar" (mostra "Copiado!" por instantes) — cola o
-   código no seu projeto.
-
-## Estrutura
-
-- `core`: `eu.dev.animator` — `AtlasAnimation` (modelo), `AnimatorApplication`
-  (bootstrap + diálogo de arquivo), `AtlasAnimationSnippetGenerator`,
-  `ui/AnimatorPanel`, `viewport/AnimationViewport`
-- `lwjgl3`: launcher desktop
-
-UI em `imgui-java`. Sem módulo Android — desktop-only.
-
-## Gerando um instalador (Windows/Linux)
-
-Ver [`BUILD.md`](BUILD.md) (não versionado, é um guia pessoal) — usa
-`jpackage` (nada extra além do JDK) pra gerar app-image/`.deb`/`.exe` com
-JRE embutida. `.github/workflows/package.yml` faz o mesmo automaticamente
-via GitHub Actions, disparado manualmente ou numa tag `v*`.
-
-## Documentação
-
-- [`docs/CONTEXT.md`](docs/CONTEXT.md) — como cada peça funciona
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — decisões de arquitetura,
-  incluindo o histórico de antes de virar só o animador
-- [`docs/TODO.md`](docs/TODO.md) — o que falta
+1. "Selecionar atlas..." — pick a `.atlas`. The file and the page image(s)
+   it references get copied into `assets/atlases/`.
+2. Pick regions (in whatever order you want them to play) via the combo +
+   "Adicionar frame". Remove one with the button next to it in the list.
+3. Adjust frame duration and looping. Pausar/Reproduzir controls the preview.
+4. "Gerar snippet" + "Copiar" (shows "Copiado!" briefly) — paste the code
+   into your project.
