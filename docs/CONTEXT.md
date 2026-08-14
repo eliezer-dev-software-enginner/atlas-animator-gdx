@@ -26,9 +26,10 @@ mais um editor de cena — isso foi abandonado, só essa funcionalidade ficou
     Pausar/Reproduzir). Desenha centralizado na origem — não tem cena, não tem
     posição, é só a prévia.
   - `ui/AnimatorPanel.java` — painel único: seleção de atlas, picker de
-    região + lista ordenada com remoção, duração/loop, Pausar/Reproduzir, geração
-    de snippet + copiar. `ui/WindowBounds.java` mantém o painel dentro da
-    área visível da janela (mesma lógica de antes).
+    região + lista ordenada com remoção, duração/loop, Pausar/Reproduzir,
+    geração de snippet + copiar (com feedback "Copiado!" por 1.5s). Painel
+    fixo (`ImGuiWindowFlags.NoMove | NoResize` + `ImGuiCond.Always`) — não
+    dá pra arrastar nem redimensionar.
 
 ## Fluxo "Selecionar atlas..."
 Igual ao "Add Atlas" do projeto anterior: lê o `.atlas` escolhido via
@@ -51,6 +52,19 @@ frames.add(atlas.findRegion("welly_asas_baixo_"));
 frames.add(atlas.findRegion("welly_planando_transicao_"));
 Animation<TextureRegion> animation = new Animation<>(0.2f, frames, Animation.PlayMode.LOOP);
 ```
+
+## Build / empacotamento
+`appName` (junto com `appVendor`/`appMenuGroup`/`projectVersion`) mora só em
+`gradle.properties` — `build.gradle` lê de lá (`ext.appName = "$appName"`),
+nada mais no projeto tem o nome hardcoded. Nome atual: `atlas-animator-gdx`.
+
+`lwjgl3/build.gradle` usa só o plugin `application` (padrão do Gradle) — sem
+`construo`/GraalVM native-image, que o projeto usava antes (herdado do
+template `gdx-liftoff` original, nunca chegou a ser usado de verdade).
+Empacotamento pra instalador nativo (Windows `.exe`/Linux `.deb`, com JRE
+embutida) é feito com `jpackage` (vem no JDK, não é dependência do
+projeto) — ver [`BUILD.md`](../BUILD.md) (não versionado) e
+`.github/workflows/package.yml` (roda automaticamente numa tag `v*`).
 
 ## Como rodar
 ```

@@ -1,4 +1,4 @@
-# GDX Atlas Animator
+# Atlas Animator GDX
 
 Ferramenta desktop pequena e focada: carrega um `TextureAtlas` (LibGDX),
 monta uma sequência de animação a partir das regiões do atlas, mostra a
@@ -31,6 +31,13 @@ porque era a que valia a pena manter.
 - `lwjgl3`: launcher desktop
 
 UI em `imgui-java`. Sem módulo Android — desktop-only.
+
+## Gerando um instalador (Windows/Linux)
+
+Ver [`BUILD.md`](BUILD.md) (não versionado, é um guia pessoal) — usa
+`jpackage` (nada extra além do JDK) pra gerar app-image/`.deb`/`.exe` com
+JRE embutida. `.github/workflows/package.yml` faz o mesmo automaticamente
+via GitHub Actions, disparado manualmente ou numa tag `v*`.
 
 ## Documentação
 

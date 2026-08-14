@@ -1,0 +1,134 @@
+name: Package installers
+
+# Manual trigger (Actions tab -> "Package installers" -> "Run workflow") for an
+# on-demand build, plus automatic on any "v*" tag for actual releases.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # jpackage's --type exe/msi shells out to WiX to actually build the installer —
+      # not needed for --type deb (Linux) or --type app-image (either OS).
+      - name: Install WiX Toolset (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install wixtoolset -y
+
+      - name: Add WiX to PATH (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wix = Get-ChildItem "C:\Program Files (x86)\WiX Toolset v*\bin" -Directory | Select-Object -First 1
+          echo "$($wix.FullName)" >> $env:GITHUB_PATH
+
+      - name: Build runnable distribution
+        shell: bash
+        run: ./gradlew :lwjgl3:installDist
+
+      # Every packaging value below (jar name, version, app name/vendor/menu group) is read
+      # from gradle.properties instead of hardcoded here — renaming the app or bumping its
+      # version only ever needs editing that one file, nothing in this workflow. The install
+      # dir under lwjgl3/build/install/ is named after appName (application.applicationName),
+      # so a wildcard is used instead of assuming a fixed folder name.
+      - name: Resolve build metadata from gradle.properties
+        id: meta
+        shell: bash
+        run: |
+          JAR=$(basename lwjgl3/build/install/*/lib/lwjgl3-*.jar)
+          echo "MAIN_JAR=$JAR" >> "$GITHUB_ENV"
+          VERSION=$(grep '^projectVersion=' gradle.properties | cut -d= -f2)
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          NAME=$(grep '^appName=' gradle.properties | cut -d= -f2)
+          echo "APP_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "APP_VENDOR=$(grep '^appVendor=' gradle.properties | cut -d= -f2)" >> "$GITHUB_ENV"
+          echo "APP_MENU_GROUP=$(grep '^appMenuGroup=' gradle.properties | cut -d= -f2)" >> "$GITHUB_ENV"
+
+      - name: Package .deb (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          jpackage \
+            --type deb \
+            --input lwjgl3/build/install/*/lib \
+            --main-jar "$MAIN_JAR" \
+            --main-class eu.dev.lwjgl3.Lwjgl3Launcher \
+            --name "$APP_NAME" \
+            --app-version "$APP_VERSION" \
+            --vendor "$APP_VENDOR" \
+            --java-options "--enable-native-access=ALL-UNNAMED" \
+            --icon lwjgl3/icons/logo.png \
+            --linux-shortcut \
+            --linux-menu-group "$APP_MENU_GROUP" \
+            --dest dist
+
+      - name: Package .exe (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          jpackage \
+            --type exe \
+            --input lwjgl3/build/install/*/lib \
+            --main-jar "$MAIN_JAR" \
+            --main-class eu.dev.lwjgl3.Lwjgl3Launcher \
+            --name "$APP_NAME" \
+            --app-version "$APP_VERSION" \
+            --vendor "$APP_VENDOR" \
+            --java-options "--enable-native-access=ALL-UNNAMED" \
+            --icon lwjgl3/icons/logo.ico \
+            --win-shortcut \
+            --win-menu \
+            --win-dir-chooser \
+            --dest dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.name }}-${{ runner.os }}
+          path: |
+            dist/*.deb
+            dist/*.exe
+          if-no-files-found: error
+
+  # Runs after both platforms finish, regardless of trigger (manual "Run workflow" or a
+  # pushed "v*" tag) — creates the release (and its tag, if it doesn't exist yet) from the
+  # current commit and attaches both installers. Re-running against the same projectVersion
+  # updates that same release's assets in place rather than failing.
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve build metadata from gradle.properties
+        id: meta
+        run: |
+          echo "version=$(grep '^projectVersion=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "name=$(grep '^appName=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.meta.outputs.version }}
+          name: ${{ steps.meta.outputs.name }} v${{ steps.meta.outputs.version }}
+          files: artifacts/**/*

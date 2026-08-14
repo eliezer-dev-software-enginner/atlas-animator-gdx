@@ -12,10 +12,6 @@ dependencies {
   runtimeOnly "io.github.spair:imgui-java-natives-linux:$imguiVersion"
   runtimeOnly "io.github.spair:imgui-java-natives-windows:$imguiVersion"
   runtimeOnly "io.github.spair:imgui-java-natives-macos:$imguiVersion"
-
-  if(enableGraalNative == 'true') {
-    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
-  }
 }
 
 jar {

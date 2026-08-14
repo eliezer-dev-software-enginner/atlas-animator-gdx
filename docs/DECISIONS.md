@@ -1,5 +1,58 @@
 # Decisões Arquiteturais
 
+## 2026-08-14 — Renomeado pra `atlas-animator-gdx`, empacotamento via jpackage (como o `hud-creator-gdx`)
+Usuário pediu configuração de geração de aplicativo igual à de outro
+projeto irmão da suite, `hud-creator-gdx`, e trocou o nome do app pra
+`atlas-animator-gdx`.
+
+**`construo` (GraalVM native-image) removido, trocado por `jpackage`
+(`application` plugin puro).** O projeto tinha um setup de packaging bem
+elaborado herdado do template `gdx-liftoff` original (`construo` +
+GraalVM, URLs de JDK hardcoded pra baixar, tasks `jarMac`/`jarLinux`/`jarWin`,
+`nativeimage.gradle`) que nunca chegou a ser usado de verdade nesta sessão
+inteira. `hud-creator-gdx` usa uma abordagem bem mais simples: `jpackage`
+(vem dentro do JDK desde a versão 14, zero dependência nova) rodado por
+fora do Gradle, sobre o output de `application`'s `installDist`. Copiei
+esse padrão em vez de manter os dois sistemas de packaging em paralelo —
+`enableGraalNative`/`graalHelperVersion` também removidos de
+`gradle.properties` (só existiam pro `construo`), junto com
+`utilsBox2dVersion`/`utilsVersion` (não referenciados em lugar nenhum,
+achados enquanto limpava) e `android.useAndroidX`/`android.enableR8.fullMode`
+(módulo `android` já nem está no build desde muito antes do pivô pro
+animador).
+
+**`appName` centralizado em `gradle.properties`** (`build.gradle` lê
+`"$appName"` em vez de ter o nome escrito direto) — mesmo padrão do
+`hud-creator-gdx`, trocar o nome do app vira editar um arquivo só. Junto
+vieram `appVendor` ("Eliezer Dev", mesmo valor do `hud-creator-gdx` — é o
+mesmo autor/vendor pra todos os apps da suite) e `appMenuGroup`
+("Games", idem).
+
+**Verificado de verdade nesta máquina antes de escrever `BUILD.md`** (não
+só copiado do `hud-creator-gdx` às cegas): rodei
+`./gradlew :lwjgl3:installDist`, depois `jpackage --type app-image` e
+**executei o binário empacotado** (rodou 8s sem erro, sem log de crash);
+depois `jpackage --type deb` e conferi a estrutura com `dpkg -c` (instala
+em `/opt/atlas-animator-gdx/`, tem o `.desktop`, o `runtime` embutido). No
+processo descobri uma diferença real em relação ao guia do
+`hud-creator-gdx`: como este projeto mantém
+`application.applicationName = appName` (o `hud-creator-gdx` não define
+isso), a pasta gerada por `installDist` chama
+`lwjgl3/build/install/atlas-animator-gdx/`, não
+`lwjgl3/build/install/lwjgl3/` como o guia original assumia — troquei por
+um `lwjgl3/build/install/*/lib/...` (wildcard) nos comandos e no workflow,
+que funciona não importa o nome da pasta.
+
+**Não testado**: a parte Windows (`.exe` via jpackage + WiX) — nem aqui
+(não tem máquina Windows) nem no runner do GitHub Actions ainda (nunca
+rodou). Mesma ressalva que o `hud-creator-gdx` já tinha pro lado Windows.
+
+**Ícone**: reaproveitado `lwjgl3/icons/logo.png`/`.ico`/`.icns`, que já
+existiam no projeto (ícone genérico do template `gdx-liftoff`, o mesmo já
+usado como ícone da janela via `Lwjgl3Launcher.setWindowIcon`) — não é um
+ícone próprio do "Atlas Animator", só um placeholder funcional. Registrado
+em `BUILD.md`, não escondido.
+
 ## 2026-08-14 — Correções depois do primeiro teste manual do usuário
 Usuário testou de verdade (primeira vez desde o pivô) e reportou 3 coisas:
 

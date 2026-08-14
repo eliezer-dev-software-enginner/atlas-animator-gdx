@@ -42,7 +42,7 @@ configure(subprojects) {
 
 subprojects {
   version = "$projectVersion"
-  ext.appName = 'gdx-atlas-animator'
+  ext.appName = "$appName"
   repositories {
     mavenCentral()
     // You may want to remove the following line if you have errors downloading dependencies.
@@ -52,4 +52,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'gdx-atlas-animator' + '-parent'
+eclipse.project.name = "$appName" + '-parent'

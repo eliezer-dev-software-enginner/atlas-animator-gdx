@@ -3,6 +3,12 @@ assets/animator-layout.ini
 animator-layout.ini
 assets/hs_err_pid*.log
 
+## Personal packaging notes, not project docs (see the file itself):
+BUILD.md
+
+## jpackage output (see BUILD.md):
+dist/
+
 ## Gradle:
 .gradle/
 gradle-app.setting
