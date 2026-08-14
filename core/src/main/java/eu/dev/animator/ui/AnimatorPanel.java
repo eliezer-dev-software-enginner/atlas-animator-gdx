@@ -7,6 +7,7 @@ import eu.dev.animator.viewport.AnimationViewport;
 import imgui.ImGui;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiInputTextFlags;
+import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 import imgui.type.ImFloat;
 import imgui.type.ImInt;
@@ -16,6 +17,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class AnimatorPanel {
+    private static final int FIXED_FLAGS = ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+
     private final ImInt regionPickIndex = new ImInt();
     private final ImFloat frameDurationField = new ImFloat();
     private final ImBoolean loopField = new ImBoolean();
@@ -23,10 +26,11 @@ public class AnimatorPanel {
     private boolean codeGenerated;
 
     public void render(AtlasAnimation animation, AnimationViewport viewport, Runnable onSelectAtlas) {
-        ImGui.setNextWindowPos(20, 20, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(380, 480, ImGuiCond.FirstUseEver);
-        ImGui.begin("Animator");
-        WindowBounds.keepOnScreen();
+        // ImGuiCond.Always (not FirstUseEver) so this stays put even if an old animator-layout.ini
+        // has a different saved position - the panel is meant to be fixed, not just clamped on-screen.
+        ImGui.setNextWindowPos(20, 20, ImGuiCond.Always);
+        ImGui.setNextWindowSize(380, 480, ImGuiCond.Always);
+        ImGui.begin("Animator", FIXED_FLAGS);
 
         ImGui.text("Atlas: " + (animation.atlas.isEmpty() ? "(nenhum)" : animation.atlas));
         if (ImGui.button("Selecionar atlas...")) {

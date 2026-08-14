@@ -14,8 +14,14 @@ import imgui.ImVec2;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Plays back the single current AtlasAnimation, centered at the world origin. */
+/**
+ * Plays back the single current AtlasAnimation, drawn centered at the world origin. The
+ * camera is offset so that origin lands to the right of the fixed Animator panel instead of
+ * behind it - the panel occupies roughly the left 40% of the window.
+ */
 public class AnimationViewport {
+    private static final float PREVIEW_X_FRACTION = 0.72f;
+
     private final OrthographicCamera camera = new OrthographicCamera();
     private final SpriteBatch batch = new SpriteBatch();
     private final Map<String, TextureAtlas> atlases = new HashMap<>();
@@ -31,6 +37,7 @@ public class AnimationViewport {
 
     public void resize(int width, int height) {
         camera.setToOrtho(false, width, height);
+        camera.position.x = width * (0.5f - PREVIEW_X_FRACTION);
     }
 
     public TextureAtlas atlas(String relativePath) {

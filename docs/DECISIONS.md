@@ -1,5 +1,35 @@
 # Decisões Arquiteturais
 
+## 2026-08-14 — Correções depois do primeiro teste manual do usuário
+Usuário testou de verdade (primeira vez desde o pivô) e reportou 3 coisas:
+
+1. **Sprite aparecia no canto inferior esquerdo**, atrás/fora da área do
+   painel. Causa: o preview desenha centralizado na origem do mundo
+   (`-width/2,-height/2`), e a câmera ortográfica padrão do gdx centraliza
+   a origem do mundo no canto inferior esquerdo da tela (câmera com
+   `yDown=false` posicionada em `width/2,height/2` por padrão). Corrigido
+   deslocando `camera.position.x` em `resize()` proporcionalmente à largura
+   da janela, pra origem cair a ~72% da largura (área livre à direita do
+   painel de ~380px) em vez de ~0%. Matemática conferida à mão (não
+   visualmente — sem screenshot, por preferência do usuário): pra
+   `PREVIEW_X_FRACTION=0.72` numa janela 960x540, `camera.position.x` fica
+   em `-211.2`, o que coloca a origem em `screen_x=691` (72% de 960).
+
+2. **Painel devia ficar fixo, não só voltar pra tela se arrastado.**
+   `WindowBounds.keepOnScreen()` (clamp reativo, corrigia DEPOIS do
+   usuário arrastar) foi trocado por `ImGuiWindowFlags.NoMove | NoResize`
+   no `ImGui.begin()`, mais `ImGuiCond.Always` (em vez de `FirstUseEver`)
+   no `setNextWindowPos`/`setNextWindowSize` — força a posição/tamanho
+   todo frame, então nem uma posição antiga salva no `.ini` de uma versão
+   anterior consegue mover o painel. `WindowBounds.java` removido (ficou
+   sem nenhum uso).
+
+3. **Conferido que `lastAtlasPath` persiste**: usuário selecionou o atlas de
+   verdade pela primeira vez, e `~/.prefs/gdx-atlas-animator` já tinha o
+   caminho salvo (`.../libgdx-example-game/assets/sprites/atlases/bird.atlas`)
+   — confirmado direto no arquivo, não só por leitura de código. Sem bug
+   aqui, só verificação.
+
 ## 2026-08-14 — Pivô: só o preview de animação por atlas sobrevive
 Usuário desistiu do projeto de editor de cena inteiro. Da lista de
 funcionalidades construídas, só a de animação por `TextureAtlas` valia a pena

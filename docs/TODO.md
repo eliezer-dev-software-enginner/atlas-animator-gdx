@@ -2,24 +2,29 @@
 
 ## Feito
 - [x] Selecionar atlas (`.atlas` + imagem de página, copiados pra
-  `assets/atlases/`)
+  `assets/atlases/`) — testado pelo usuário, funcionou, inclusive
+  `lastAtlasPath` confirmado persistindo em `~/.prefs/gdx-atlas-animator`
 - [x] Montar sequência de regiões (picker + lista ordenada com remoção)
 - [x] Duração do frame + loop
 - [x] Preview tocando de verdade no viewport, com Pause/Play
 - [x] Geração de snippet de código (sem classe) + copiar
-- [x] Painel preso na área visível da janela
 - [x] Renomeado pra "GDX Atlas Animator" (app, gradle, janela)
 - [x] Removido tudo do escopo antigo (cena, anchors, tilemap, sprites
   estáticos, geração de classe) — ver `DECISIONS.md`
+- [x] Preview reposicionado pra área à direita do painel (antes aparecia no
+  canto inferior esquerdo, atrás/fora da área visível)
+- [x] Painel `Animator` agora é fixo de verdade (`NoMove`/`NoResize` +
+  `ImGuiCond.Always`) em vez de só clampado — não dá mais pra arrastar nem
+  redimensionar. `WindowBounds` removido (ficou sem uso)
 
 ## Não testado ainda
-Tudo isso é código novo (refactor completo) — só compilação e execução sem
-crash foram verificadas, nenhum clique real:
-- "Selecionar atlas..." (diálogo, cópia de arquivo)
 - Picker de região / adicionar / remover frame
 - Pause/Play
 - "Gerar snippet" / "Copiar"
-- Painel preso na tela ao tentar arrastar pra fora
+- Se o painel realmente não se move ao tentar arrastar o título (só
+  compilação + execução sem crash foram verificadas)
+- Se o preview aparece mesmo à direita do painel na prática (matemática da
+  câmera conferida à mão, não visualmente)
 
 ## Possíveis próximos passos
 - Lembrar a última animação montada entre execuções (hoje começa vazio
