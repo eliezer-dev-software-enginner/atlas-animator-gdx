@@ -19,8 +19,9 @@ porque era a que valia a pena manter.
    de página que ele referencia são copiados pra `assets/atlases/`.
 2. Escolhe as regiões (na ordem que quiser que toquem) pelo combo + "Adicionar
    frame". Remove com o botão ao lado de cada frame na lista.
-3. Ajusta duração do frame e loop. Pause/Play controla a prévia.
-4. "Gerar snippet" + "Copiar" — cola o código no seu projeto.
+3. Ajusta duração do frame e repetição. Pausar/Reproduzir controla a prévia.
+4. "Gerar snippet" + "Copiar" (mostra "Copiado!" por instantes) — cola o
+   código no seu projeto.
 
 ## Estrutura
 

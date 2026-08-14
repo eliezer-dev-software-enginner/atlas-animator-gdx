@@ -1,5 +1,6 @@
 package eu.dev.animator.ui;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import eu.dev.animator.AtlasAnimation;
 import eu.dev.animator.AtlasAnimationSnippetGenerator;
@@ -24,13 +25,14 @@ public class AnimatorPanel {
     private final ImBoolean loopField = new ImBoolean();
     private final ImString codeBuffer = new ImString(2048);
     private boolean codeGenerated;
+    private float copyFeedbackTimer;
 
     public void render(AtlasAnimation animation, AnimationViewport viewport, Runnable onSelectAtlas) {
         // ImGuiCond.Always (not FirstUseEver) so this stays put even if an old animator-layout.ini
         // has a different saved position - the panel is meant to be fixed, not just clamped on-screen.
         ImGui.setNextWindowPos(20, 20, ImGuiCond.Always);
         ImGui.setNextWindowSize(380, 480, ImGuiCond.Always);
-        ImGui.begin("Animator", FIXED_FLAGS);
+        ImGui.begin("Animador", FIXED_FLAGS);
 
         ImGui.text("Atlas: " + (animation.atlas.isEmpty() ? "(nenhum)" : animation.atlas));
         if (ImGui.button("Selecionar atlas...")) {
@@ -59,10 +61,10 @@ public class AnimatorPanel {
             animation.frameDuration = Math.max(0.01f, frameDurationField.get());
         }
         loopField.set(animation.loop);
-        if (ImGui.checkbox("Loop", loopField)) animation.loop = loopField.get();
+        if (ImGui.checkbox("Repetir", loopField)) animation.loop = loopField.get();
 
         ImGui.separator();
-        if (ImGui.button(viewport.isPaused() ? "Play" : "Pause")) {
+        if (ImGui.button(viewport.isPaused() ? "Reproduzir" : "Pausar")) {
             viewport.togglePause();
         }
 
@@ -107,6 +109,12 @@ public class AnimatorPanel {
             ImGui.inputTextMultiline("##snippet", codeBuffer, 340, 160, ImGuiInputTextFlags.ReadOnly);
             if (ImGui.button("Copiar")) {
                 ImGui.setClipboardText(codeBuffer.get());
+                copyFeedbackTimer = 1.5f;
+            }
+            if (copyFeedbackTimer > 0f) {
+                copyFeedbackTimer -= Gdx.graphics.getDeltaTime();
+                ImGui.sameLine();
+                ImGui.textColored(0.4f, 1f, 0.4f, 1f, "Copiado!");
             }
         }
     }

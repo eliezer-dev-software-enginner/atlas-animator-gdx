@@ -23,10 +23,10 @@ mais um editor de cena — isso foi abandonado, só essa funcionalidade ficou
     (botão do meio), cache de `TextureAtlas`, toca a animação de verdade
     (`Animation<TextureRegion>` reconstruído a cada frame a partir das
     regiões, `stateTime` acumulado com `Gdx.graphics.getDeltaTime()`,
-    Pause/Play). Desenha centralizado na origem — não tem cena, não tem
+    Pausar/Reproduzir). Desenha centralizado na origem — não tem cena, não tem
     posição, é só a prévia.
   - `ui/AnimatorPanel.java` — painel único: seleção de atlas, picker de
-    região + lista ordenada com remoção, duração/loop, Pause/Play, geração
+    região + lista ordenada com remoção, duração/loop, Pausar/Reproduzir, geração
     de snippet + copiar. `ui/WindowBounds.java` mantém o painel dentro da
     área visível da janela (mesma lógica de antes).
 

@@ -68,7 +68,7 @@ preso na tela), e o padrão de diálogo em thread própria +
 `AnimationViewport`; `InspectorPanel`+`HierarchyPanel`+`EditorUI` → um único
 `AnimatorPanel` (só existe uma coisa sendo editada agora, não faz sentido
 dividir em painéis separados nem ter uma barra de menu com várias ações —
-sobrou só "Selecionar atlas..." e Pause/Play, ambos cabem direto no painel).
+sobrou só "Selecionar atlas..." e Pausar/Reproduzir, ambos cabem direto no painel).
 `appName` no Gradle e o título da janela viraram "gdx-atlas-animator"/"GDX
 Atlas Animator". `editor-layout.ini` → `animator-layout.ini`.
 

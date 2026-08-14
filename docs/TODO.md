@@ -6,7 +6,7 @@
   `lastAtlasPath` confirmado persistindo em `~/.prefs/gdx-atlas-animator`
 - [x] Montar sequência de regiões (picker + lista ordenada com remoção)
 - [x] Duração do frame + loop
-- [x] Preview tocando de verdade no viewport, com Pause/Play
+- [x] Preview tocando de verdade no viewport, com Pausar/Reproduzir
 - [x] Geração de snippet de código (sem classe) + copiar
 - [x] Renomeado pra "GDX Atlas Animator" (app, gradle, janela)
 - [x] Removido tudo do escopo antigo (cena, anchors, tilemap, sprites
@@ -19,7 +19,7 @@
 
 ## Não testado ainda
 - Picker de região / adicionar / remover frame
-- Pause/Play
+- Pausar/Reproduzir
 - "Gerar snippet" / "Copiar"
 - Se o painel realmente não se move ao tentar arrastar o título (só
   compilação + execução sem crash foram verificadas)
