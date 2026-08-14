@@ -15,6 +15,15 @@ Usuário testou de verdade (primeira vez desde o pivô) e reportou 3 coisas:
    `PREVIEW_X_FRACTION=0.72` numa janela 960x540, `camera.position.x` fica
    em `-211.2`, o que coloca a origem em `screen_x=691` (72% de 960).
 
+1b. **Correção do item 1**: depois de corrigir o X, o sprite apareceu embaixo
+   à direita em vez de à direita centralizado verticalmente — só ajustei
+   `camera.position.x`, deixei `camera.position.y` no padrão
+   (`height/2`), que pelo mesmo motivo do item 1 põe a origem do mundo na
+   borda INFERIOR da tela, não no centro vertical. Usuário pediu "lá em
+   cima", não centralizado — adicionado `PREVIEW_Y_FRACTION=0.8` com a
+   mesma fórmula do X (`camera.position.y = height*(0.5-0.8)`), colocando a
+   origem a 80% da altura (de baixo pra cima), perto do topo com margem.
+
 2. **Painel devia ficar fixo, não só voltar pra tela se arrastado.**
    `WindowBounds.keepOnScreen()` (clamp reativo, corrigia DEPOIS do
    usuário arrastar) foi trocado por `ImGuiWindowFlags.NoMove | NoResize`

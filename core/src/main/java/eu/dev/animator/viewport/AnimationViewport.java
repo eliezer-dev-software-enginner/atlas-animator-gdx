@@ -16,11 +16,14 @@ import java.util.Map;
 
 /**
  * Plays back the single current AtlasAnimation, drawn centered at the world origin. The
- * camera is offset so that origin lands to the right of the fixed Animator panel instead of
- * behind it - the panel occupies roughly the left 40% of the window.
+ * camera is offset so that origin lands in the upper-right area of the window instead of the
+ * bottom-left corner (where an unshifted y-up ortho camera centered at width/2,height/2 would
+ * otherwise put it) - clear of the fixed Animator panel on the left, and near the top rather
+ * than vertically centered.
  */
 public class AnimationViewport {
     private static final float PREVIEW_X_FRACTION = 0.72f;
+    private static final float PREVIEW_Y_FRACTION = 0.8f;
 
     private final OrthographicCamera camera = new OrthographicCamera();
     private final SpriteBatch batch = new SpriteBatch();
@@ -38,6 +41,7 @@ public class AnimationViewport {
     public void resize(int width, int height) {
         camera.setToOrtho(false, width, height);
         camera.position.x = width * (0.5f - PREVIEW_X_FRACTION);
+        camera.position.y = height * (0.5f - PREVIEW_Y_FRACTION);
     }
 
     public TextureAtlas atlas(String relativePath) {
