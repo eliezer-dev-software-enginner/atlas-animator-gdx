@@ -13,6 +13,8 @@ survived, because that was the part worth keeping.
 
 ![App Screenshot](https://i.ibb.co/Kp5sMqqq/Screenshot-from-2026-08-14-21-05-47.png)
 
+### See it working on Youtube
+[Youtube video](https://www.youtube.com/watch?v=iQyCP8ryB-8)
 
 1. "Select atlas..." — pick a `.atlas`. The file and the page image(s) it
    references get copied into `assets/atlases/`.
